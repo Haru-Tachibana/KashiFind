@@ -13,7 +13,8 @@ const SongCard = ({ song, showLyrics = false }) => {
   };
 
   // Determine the correct ID for routing
-  const songId = song._id || song.externalId || song.id;
+  // Use internal id first, then externalId as fallback
+  const songId = song.id || song._id || song.externalId;
   
   // Debug logging
   console.log('SongCard - Song:', song.title, 'ID:', songId, 'ExternalId:', song.externalId);

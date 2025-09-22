@@ -246,6 +246,9 @@ app.get('/api/search/realtime', async (req, res) => {
         console.log(`Caching ${externalResults.length} external songs...`);
         externalResults.forEach(song => {
           if (song.externalId) {
+            // Add id field to match externalId for consistent routing
+            song.id = song.externalId;
+            
             // Cache with both externalId and a generated ID for flexibility
             const cacheId = `ext_${song.externalId}`;
             externalSongCache.set(song.externalId, song);

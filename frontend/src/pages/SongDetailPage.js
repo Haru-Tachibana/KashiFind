@@ -15,102 +15,36 @@ import {
 import LyricsDisplay from '../components/LyricsDisplay';
 import SongCard from '../components/SongCard';
 import YouTubePlayer from '../components/YouTubePlayer';
-import { getSong, getRelatedSongs } from '../utils/api';
+import { getSong, getExternalSong, getRelatedSongs } from '../utils/api';
 
 const SongDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lyricsFormat, setLyricsFormat] = useState('original');
 
-  // Fetch song details
+  // Fetch song details - try local first, then external
   const { data: song, isLoading, error } = useQuery(
     ['song', id],
-    () => getSong(id),
+    async () => {
+      try {
+        // First try to get from local database
+        return await getSong(id);
+      } catch (err) {
+        // If 404, try external API
+        if (err.response?.status === 404) {
+          return await getExternalSong(id);
+        }
+        throw err;
+      }
+    },
     {
       enabled: !!id,
       retry: false, // Don't retry on 404
     }
   );
 
-  // Create fallback song for external songs
-  const getFallbackSong = () => {
-    if (error?.response?.status === 404) {
-      // This is likely an external song, create a fallback with sample data
-      // Generate different content based on song ID for variety
-      const songVariations = [
-        {
-          title: '夜に駆ける',
-          artist: 'YOASOBI',
-          album: 'THE BOOK',
-          year: 2020,
-          lyrics: {
-            original: '沈むように溶けてゆくように\n二人だけの空が広がる夜に\n「さよなら」だけだった\nその一言で全てが分かった\n\n夢ならばどれほどよかったでしょう\n未だにあなたのことを夢にみる\n忘れた物を取りに帰るように\n古びた思い出の埃を払う',
-            hiragana: 'しずむようにとけてゆくように\nふたりだけのそらがひろがるよるに\n「さよなら」だけだった\nそのひとことですべてがわかった\n\nゆめならばどれほどよかったでしょう\nいまだにあなたのことをゆめにみる\nわすれたものをとりにかえるように\nふるびたおもいでのほこりをはらう',
-            romaji: 'shizumu you ni tokete yuku you ni\nfutari dake no sora ga hirogaru yoru ni\n"sayonara" dake datta\nsono hitokoto de subete ga wakatta\n\nyume naraba dore hodo yokatta deshou\nimada ni anata no koto wo yume ni miru\nwasureta mono wo tori ni kaeru you ni\nfurubita omoide no hokori wo harau'
-          },
-          tags: ['バーチャルシンガー', '人気', '切ない', '小説原作']
-        },
-        {
-          title: 'Lemon',
-          artist: '米津玄師',
-          album: 'Lemon',
-          year: 2018,
-          lyrics: {
-            original: '夢ならばどれほどよかったでしょう\n未だにあなたのことを夢にみる\n忘れた物を取りに帰るように\n古びた思い出の埃を払う\n\n戻らない幸せがあることを\n最後にあなたが教えてくれた\n言えずに隠してた昏い過去も\nあなたがいなきゃ永遠に昏いまま',
-            hiragana: 'ゆめならばどれほどよかったでしょう\nいまだにあなたのことをゆめにみる\nわすれたものをとりにかえるように\nふるびたおもいでのほこりをはらう\n\nもどらないしあわせがあることを\nさいごにあなたがおしえてくれた\nいえずにかくしてたくらいかこも\nあなたがいなきゃえいえんにくらいまま',
-            romaji: 'yume naraba dore hodo yokatta deshou\nimada ni anata no koto wo yume ni miru\nwasureta mono wo tori ni kaeru you ni\nfurubita omoide no hokori wo harau\n\nmodoranai shiawase ga aru koto wo\nsaigo ni anata ga oshiete kureta\niezu ni kakushiteta kurai kako mo\nanata ga inakya eien ni kurai mama'
-          },
-          tags: ['人気', '切ない', 'ドラマ主題歌', 'ロック']
-        },
-        {
-          title: 'Pretender',
-          artist: 'Official髭男dism',
-          album: 'Traveler',
-          year: 2019,
-          lyrics: {
-            original: '君の声が聞こえる\n君の声が聞こえる\n君の声が聞こえる\n君の声が聞こえる\n\n君の声が聞こえる\n君の声が聞こえる\n君の声が聞こえる\n君の声が聞こえる',
-            hiragana: 'きみのこえがきこえる\nきみのこえがきこえる\nきみのこえがきこえる\nきみのこえがきこえる\n\nきみのこえがきこえる\nきみのこえがきこえる\nきみのこえがきこえる\nきみのこえがきこえる',
-            romaji: 'kimi no koe ga kikoeru\nkimi no koe ga kikoeru\nkimi no koe ga kikoeru\nkimi no koe ga kikoeru\n\nkimi no koe ga kikoeru\nkimi no koe ga kikoeru\nkimi no koe ga kikoeru\nkimi no koe ga kikoeru'
-          },
-          tags: ['人気', 'ロック', 'バンド', '映画主題歌']
-        }
-      ];
-      
-      // Use song ID to determine which variation to use
-      // Create a more dynamic hash from the song ID
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) {
-        const char = id.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
-      }
-      const variationIndex = Math.abs(hash) % songVariations.length;
-      const variation = songVariations[variationIndex];
-      
-      return {
-        _id: id,
-        title: variation.title,
-        artist: variation.artist,
-        album: variation.album,
-        year: variation.year,
-        genre: 'J-POP',
-        lyrics: variation.lyrics,
-        metadata: {
-          duration: 241,
-          bpm: 140,
-          key: 'Am',
-          language: 'ja'
-        },
-        tags: variation.tags,
-        popularity: 2000000,
-        source: 'spotify',
-        externalId: id
-      };
-    }
-    return null;
-  };
-
-  const displaySong = song || getFallbackSong();
+  // Use the fetched song
+  const displaySong = song;
 
   // Fetch related songs
   const { data: relatedSongs = [] } = useQuery(

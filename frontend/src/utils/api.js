@@ -48,6 +48,10 @@ export const getSong = (id) => {
   return api.get(`/songs/${id}`);
 };
 
+export const getExternalSong = (id) => {
+  return api.get(`/songs/external/${id}`);
+};
+
 export const createSong = (songData) => {
   return api.post('/songs', songData);
 };

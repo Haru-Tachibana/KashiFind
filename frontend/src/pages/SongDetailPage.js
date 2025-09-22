@@ -21,6 +21,9 @@ const SongDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lyricsFormat, setLyricsFormat] = useState('original');
+  
+  // Debug logging for received ID
+  console.log('🆔 SongDetailPage received ID:', id);
 
   // Fetch song details - always use external API since we use external IDs
   const { data: song, isLoading, error } = useQuery(

@@ -16,8 +16,13 @@ const SongCard = ({ song, showLyrics = false }) => {
   const songId = song.externalId || song.id || song._id;
   
   // Debug logging
-  console.log('SongCard - Song:', song.title, 'ID:', songId, 'ExternalId:', song.externalId);
-  console.log('SongCard - Full song object:', song);
+  console.log('🆔 SongCard Navigation Debug:');
+  console.log('  Song:', song.title);
+  console.log('  externalId:', song.externalId);
+  console.log('  id:', song.id);
+  console.log('  _id:', song._id);
+  console.log('  Using for navigation:', songId);
+  console.log('  Full song object:', song);
   
   return (
     <Link 

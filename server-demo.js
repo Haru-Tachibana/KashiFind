@@ -21,13 +21,27 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
+// Rate limiting - more lenient for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api/', limiter);
+
+// More lenient rate limiting for search endpoints
+const searchLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // 60 requests per minute for search
+  message: 'Too many search requests, please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply search rate limiting to search endpoints
+app.use('/api/search/', searchLimiter);
 
 // Sample data for demonstration - now only for songs not available on Spotify
 const sampleSongs = [

@@ -8,6 +8,41 @@ class ExternalAPIs {
     this.spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     this.youtubeAPIKey = process.env.YOUTUBE_API_KEY;
     this.spotifyAccessToken = null;
+    
+    // Rate limiting
+    this.lastSpotifyCall = 0;
+    this.lastGeniusCall = 0;
+    this.lastYouTubeCall = 0;
+    this.minInterval = 1000; // 1 second between calls
+  }
+
+  // Rate limiting helper
+  async rateLimit(apiType) {
+    const now = Date.now();
+    let lastCall;
+    
+    switch (apiType) {
+      case 'spotify':
+        lastCall = this.lastSpotifyCall;
+        this.lastSpotifyCall = now;
+        break;
+      case 'genius':
+        lastCall = this.lastGeniusCall;
+        this.lastGeniusCall = now;
+        break;
+      case 'youtube':
+        lastCall = this.lastYouTubeCall;
+        this.lastYouTubeCall = now;
+        break;
+      default:
+        return;
+    }
+    
+    const timeSinceLastCall = now - lastCall;
+    if (timeSinceLastCall < this.minInterval) {
+      const delay = this.minInterval - timeSinceLastCall;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
 
   // Get Spotify access token
@@ -36,6 +71,9 @@ class ExternalAPIs {
   // Search Spotify for songs
   async searchSpotify(query, limit = 20) {
     try {
+      // Apply rate limiting
+      await this.rateLimit('spotify');
+      
       const token = await this.getSpotifyToken();
       if (!token) {
         console.log('No Spotify token available');
@@ -50,6 +88,11 @@ class ExternalAPIs {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          console.log('Spotify rate limit exceeded, waiting...');
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+          return this.searchSpotify(query, limit); // Retry once
+        }
         console.error('Spotify API error:', response.status, response.statusText);
         return [];
       }
@@ -94,6 +137,9 @@ class ExternalAPIs {
   // Search Genius for lyrics
   async searchGenius(query, limit = 20) {
     try {
+      // Apply rate limiting
+      await this.rateLimit('genius');
+      
       if (!this.geniusAPIKey) {
         console.log('No Genius API key available');
         return [];
@@ -107,6 +153,11 @@ class ExternalAPIs {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          console.log('Genius rate limit exceeded, waiting...');
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+          return this.searchGenius(query, limit); // Retry once
+        }
         console.error('Genius API error:', response.status, response.statusText);
         const errorData = await response.json();
         console.error('Genius error details:', errorData);

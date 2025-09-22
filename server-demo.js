@@ -235,6 +235,12 @@ app.get('/api/search/realtime', async (req, res) => {
         });
       } catch (error) {
         console.error('Error fetching external results:', error);
+        
+        // Check if it's a rate limiting error
+        if (error.message && error.message.includes('429')) {
+          console.log('Rate limit exceeded, using fallback results');
+        }
+        
         // Fallback to simulated results
         externalResults = [
           {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
@@ -34,17 +34,23 @@ const SongDetailPage = () => {
     {
       enabled: !!id,
       retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
+      refetchOnWindowFocus: false, // Don't refetch when window gains focus
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
     }
   );
 
   // Use the fetched song
   const displaySong = song?.data || song;
   
-  // Debug logging
-  if (displaySong) {
-    console.log('🎵 Song loaded:', displaySong.title, 'by', displaySong.artist);
-    console.log('📝 Lyrics available:', !!displaySong.lyrics);
-  }
+  // Debug logging - only log once per song
+  useEffect(() => {
+    if (displaySong) {
+      console.log('🎵 Song loaded:', displaySong.title, 'by', displaySong.artist);
+      console.log('📝 Lyrics available:', !!displaySong.lyrics);
+    }
+  }, [displaySong?.title, displaySong?.artist]);
 
   // Fetch related songs
   const { data: relatedSongs = [] } = useQuery(
@@ -52,6 +58,9 @@ const SongDetailPage = () => {
     () => getRelatedSongs(id, { limit: 6 }),
     {
       enabled: !!displaySong,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
     }
   );
 

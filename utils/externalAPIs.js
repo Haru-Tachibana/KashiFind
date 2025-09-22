@@ -114,12 +114,8 @@ class ExternalAPIs {
         popularity: track.popularity || 0,
         duration: Math.floor(track.duration_ms / 1000),
         imageUrl: track.album?.images?.[0]?.url,
-        // Add sample lyrics for demonstration
-        lyrics: {
-          original: this.generateSampleLyrics(track.name, track.artists[0]?.name),
-          hiragana: this.generateHiragana(track.name, track.artists[0]?.name),
-          romaji: this.generateRomaji(track.name, track.artists[0]?.name)
-        },
+        // Don't generate sample lyrics - will be fetched when needed
+        lyrics: null,
         tags: this.generateTags('J-POP'),
         metadata: {
           duration: Math.floor(track.duration_ms / 1000),
@@ -180,12 +176,8 @@ class ExternalAPIs {
         url: hit.result?.url,
         imageUrl: hit.result?.song_art_image_url,
         popularity: hit.result?.stats?.pageviews || 0,
-        // Add sample lyrics for demonstration
-        lyrics: {
-          original: this.generateSampleLyrics(hit.result?.title, hit.result?.primary_artist?.name),
-          hiragana: this.generateHiragana(hit.result?.title, hit.result?.primary_artist?.name),
-          romaji: this.generateRomaji(hit.result?.title, hit.result?.primary_artist?.name)
-        },
+        // Don't generate sample lyrics - will be fetched when needed
+        lyrics: null,
         tags: this.generateTags('J-POP'),
         metadata: {
           duration: Math.floor(Math.random() * 180) + 120,

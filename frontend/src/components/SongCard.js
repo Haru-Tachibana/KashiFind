@@ -12,9 +12,8 @@ const SongCard = ({ song, showLyrics = false }) => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
-  // Determine the correct ID for routing
-  // Use internal id first, then externalId as fallback
-  const songId = song.id || song._id || song.externalId;
+  // Always use externalId for routing since all songs are external
+  const songId = song.externalId || song.id || song._id;
   
   // Debug logging
   console.log('SongCard - Song:', song.title, 'ID:', songId, 'ExternalId:', song.externalId);

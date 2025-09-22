@@ -524,7 +524,7 @@ app.get('/api/songs/external/:id', async (req, res) => {
     // Check if we have cached song data
     if (externalSongCache.has(id)) {
       const songData = externalSongCache.get(id);
-      console.log(`Found cached song:`, songData.title);
+      console.log(`✅ Found cached song by direct key:`, songData.title);
       console.log(`Cached song lyrics:`, songData.lyrics?.original?.substring(0, 50) + '...');
       return res.json({
         success: true,
@@ -533,9 +533,11 @@ app.get('/api/songs/external/:id', async (req, res) => {
     }
     
     // Try to find by externalId in cache
+    console.log(`🔍 Searching cache for externalId: ${id}`);
     for (const [key, song] of externalSongCache.entries()) {
+      console.log(`Checking: key="${key}", song.externalId="${song.externalId}", match=${song.externalId === id || key === id}`);
       if (song.externalId === id || key === id) {
-        console.log(`Found song by externalId:`, song.title);
+        console.log(`✅ Found song by externalId:`, song.title);
         
         // If lyrics are not available, fetch them
         if (!song.lyrics) {

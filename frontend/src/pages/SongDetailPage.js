@@ -22,30 +22,18 @@ const SongDetailPage = () => {
   const navigate = useNavigate();
   const [lyricsFormat, setLyricsFormat] = useState('original');
 
-  // Fetch song details - try local first, then external
+  // Fetch song details - always use external API since we use external IDs
   const { data: song, isLoading, error } = useQuery(
     ['song', id],
     async () => {
-      try {
-        // First try to get from local database
-        console.log('🔍 Fetching from local database:', id);
-        const response = await getSong(id);
-        console.log('✅ Found in local database:', response.data?.title);
-        return response;
-      } catch (err) {
-        // If 404, try external API
-        if (err.response?.status === 404) {
-          console.log('❌ Not found locally, fetching from external API:', id);
-          const externalResponse = await getExternalSong(id);
-          console.log('✅ Found in external API:', externalResponse.data?.title);
-          return externalResponse;
-        }
-        throw err;
-      }
+      console.log('🌐 Fetching from external API:', id);
+      const response = await getExternalSong(id);
+      console.log('✅ Found in external API:', response.data?.title);
+      return response;
     },
     {
       enabled: !!id,
-      retry: false, // Don't retry on 404
+      retry: false,
     }
   );
 

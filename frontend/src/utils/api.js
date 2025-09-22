@@ -107,11 +107,6 @@ export const processText = (text) => {
   return api.post('/lyrics/process', { text });
 };
 
-// YouTube API functions
-export const getYouTubeVideos = (songId) => {
-  return api.get(`/songs/${songId}/youtube`);
-};
-
 export const generateFurigana = (text) => {
   return api.post('/lyrics/furigana', { text });
 };

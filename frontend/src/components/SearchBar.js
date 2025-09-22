@@ -8,7 +8,8 @@ const SearchBar = ({
   initialValue = '', 
   placeholder = 'Search songs, artists, or lyrics...',
   showSuggestions = true,
-  className = ''
+  className = '',
+  onSearch = () => {}
 }) => {
   const [query, setQuery] = useState(initialValue);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
@@ -24,6 +25,17 @@ const SearchBar = ({
       staleTime: 30000, // 30 seconds
     }
   );
+
+  // Trigger search when query changes (with debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (query.trim()) {
+        onSearch(query.trim());
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [query, onSearch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

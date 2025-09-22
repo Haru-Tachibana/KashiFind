@@ -240,6 +240,7 @@ app.get('/api/search/realtime', async (req, res) => {
           includeExternal: true 
         });
         externalResults = externalData.external || [];
+        console.log(`External API returned ${externalResults.length} songs for query: "${finalQuery}"`);
         
         // Cache the external songs for later retrieval
         console.log(`Caching ${externalResults.length} external songs...`);

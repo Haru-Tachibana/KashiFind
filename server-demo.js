@@ -500,6 +500,12 @@ app.get('/api/songs/external/:id', async (req, res) => {
     
     console.log(`Looking for external song with ID: ${id}`);
     console.log(`Cache keys:`, Array.from(externalSongCache.keys()));
+    console.log(`Cache size:`, externalSongCache.size);
+    
+    // Debug: show all cached songs
+    for (const [key, song] of externalSongCache.entries()) {
+      console.log(`Cached: ${key} -> ${song.title} (externalId: ${song.externalId})`);
+    }
     
     // Check if we have cached song data
     if (externalSongCache.has(id)) {
@@ -535,56 +541,14 @@ app.get('/api/songs/external/:id', async (req, res) => {
       });
     }
     
-    console.log(`Song not found in cache, searching external APIs for: ${id}`);
+    console.log(`Song not found in cache, cannot search external APIs with ID: ${id}`);
+    console.log(`This should not happen - songs should be cached during search`);
     
-    // Try to get song details from external APIs
-    const externalResults = await externalAPIs.searchMultipleSources(id, 1);
-    
-    if (externalResults.length > 0) {
-      const song = externalResults[0];
-      
-      // Generate sample lyrics for demonstration
-      const sampleLyrics = {
-        original: `これは「${song.title}」の歌詞です。\n実際の歌詞は外部APIから取得されます。\n\nこの楽曲は「${song.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
-        hiragana: `これは「${song.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくされます。\n\nこのがっきょくは「${song.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
-        romaji: `kore wa "${song.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku saremasu.\n\nkono gakkyoku wa "${song.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
-      };
-      
-      const songData = {
-        _id: id,
-        title: song.title,
-        artist: song.artist,
-        album: song.album || 'Unknown Album',
-        year: song.year || new Date().getFullYear(),
-        genre: song.genre || 'J-POP',
-        lyrics: sampleLyrics,
-        metadata: {
-          duration: song.duration || 240,
-          bpm: song.bpm || 120,
-          key: song.key || 'C',
-          language: 'ja'
-        },
-        tags: song.tags || ['人気', 'J-POP'],
-        popularity: song.popularity || 1000000,
-        source: 'external',
-        externalId: id,
-        imageUrl: song.imageUrl,
-        previewUrl: song.previewUrl
-      };
-      
-      // Cache the song data
-      externalSongCache.set(id, songData);
-      
-      return res.json({
-        success: true,
-        data: songData
-      });
-    }
-    
-    // If no external data found, return 404
-    res.status(404).json({
+    // Return 404 if song not found in cache
+    return res.status(404).json({
       success: false,
-      error: 'Song not found'
+      error: 'Song not found in cache',
+      message: 'Song was not properly cached during search'
     });
   } catch (error) {
     console.error('Error fetching external song details:', error);

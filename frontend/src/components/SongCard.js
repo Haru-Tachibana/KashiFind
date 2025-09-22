@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Music, Calendar } from 'lucide-react';
 
 const SongCard = ({ song, showLyrics = false }) => {
+  const navigate = useNavigate();
+  
   const formatYear = (year) => {
     return year ? year.toString() : 'Unknown';
   };
@@ -15,19 +17,22 @@ const SongCard = ({ song, showLyrics = false }) => {
   // Always use externalId for routing since all songs are external
   const songId = song.externalId || song.id || song._id;
   
-  // Debug logging
-  console.log('🆔 SongCard Navigation Debug:');
-  console.log('  Song:', song.title);
-  console.log('  externalId:', song.externalId);
-  console.log('  id:', song.id);
-  console.log('  _id:', song._id);
-  console.log('  Using for navigation:', songId);
-  console.log('  Full song object:', song);
+  const handleClick = () => {
+    console.log('🆔 SongCard Navigation Debug:');
+    console.log('  Song:', song.title);
+    console.log('  externalId:', song.externalId);
+    console.log('  id:', song.id);
+    console.log('  _id:', song._id);
+    console.log('  Using for navigation:', songId);
+    console.log('  Navigating to:', `/song/${songId}`);
+    
+    navigate(`/song/${songId}`);
+  };
   
   return (
-    <Link 
-      to={`/song/${songId}`}
-      className="block group"
+    <div 
+      onClick={handleClick}
+      className="block group cursor-pointer"
     >
       <div className="card hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
         <div className="flex items-start space-x-4">
@@ -92,7 +97,7 @@ const SongCard = ({ song, showLyrics = false }) => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

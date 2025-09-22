@@ -526,6 +526,16 @@ app.get('/api/songs/external/:id', async (req, res) => {
       const songData = externalSongCache.get(id);
       console.log(`✅ Found cached song by direct key:`, songData.title);
       console.log(`Cached song lyrics:`, songData.lyrics?.original?.substring(0, 50) + '...');
+      
+      // Log the complete song data being returned
+      console.log('🎶 COMPLETE SONG DATA BEING RETURNED (direct cache):');
+      console.log('  Title:', songData.title);
+      console.log('  Artist:', songData.artist);
+      console.log('  ExternalId:', songData.externalId);
+      console.log('  ID:', songData.id);
+      console.log('  Source:', songData.source);
+      console.log('  Full song object:', JSON.stringify(songData, null, 2));
+      
       return res.json({
         success: true,
         data: songData
@@ -569,6 +579,16 @@ app.get('/api/songs/external/:id', async (req, res) => {
         }
         
         console.log(`Found song lyrics:`, song.lyrics?.original?.substring(0, 50) + '...');
+        
+        // Log the complete song data being returned
+        console.log('🎶 COMPLETE SONG DATA BEING RETURNED:');
+        console.log('  Title:', song.title);
+        console.log('  Artist:', song.artist);
+        console.log('  ExternalId:', song.externalId);
+        console.log('  ID:', song.id);
+        console.log('  Source:', song.source);
+        console.log('  Full song object:', JSON.stringify(song, null, 2));
+        
         return res.json({
           success: true,
           data: song

@@ -194,19 +194,6 @@ const SongDetailPage = () => {
                 )}
               </div>
 
-              {/* Tags */}
-              {displaySong.tags && displaySong.tags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {displaySong.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}

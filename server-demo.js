@@ -505,6 +505,7 @@ app.get('/api/songs/external/:id', async (req, res) => {
     if (externalSongCache.has(id)) {
       const songData = externalSongCache.get(id);
       console.log(`Found cached song:`, songData.title);
+      console.log(`Cached song lyrics:`, songData.lyrics?.original?.substring(0, 50) + '...');
       return res.json({
         success: true,
         data: songData
@@ -515,6 +516,7 @@ app.get('/api/songs/external/:id', async (req, res) => {
     for (const [key, song] of externalSongCache.entries()) {
       if (song.externalId === id || key === id) {
         console.log(`Found song by externalId:`, song.title);
+        console.log(`Found song lyrics:`, song.lyrics?.original?.substring(0, 50) + '...');
         return res.json({
           success: true,
           data: song

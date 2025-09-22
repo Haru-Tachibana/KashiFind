@@ -34,7 +34,7 @@ app.use('/api/', limiter);
 // More lenient rate limiting for search endpoints
 const searchLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60, // 60 requests per minute for search
+  max: 200, // 200 requests per minute for search (increased for development)
   message: 'Too many search requests, please slow down.',
   standardHeaders: true,
   legacyHeaders: false,

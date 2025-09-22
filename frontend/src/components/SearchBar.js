@@ -12,17 +12,28 @@ const SearchBar = ({
   onSearch = () => {}
 }) => {
   const [query, setQuery] = useState(initialValue);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialValue);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const navigate = useNavigate();
 
+  // Debounce the query for suggestions
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 800); // 800ms debounce for suggestions
+
+    return () => clearTimeout(timeoutId);
+  }, [query]);
+
   // Debounced search for suggestions
   const { data: suggestions = [], isLoading } = useQuery(
-    ['suggestions', query],
-    () => searchSuggestions(query),
+    ['suggestions', debouncedQuery],
+    () => searchSuggestions(debouncedQuery),
     {
-      enabled: query.length >= 2 && showSuggestions,
-      staleTime: 30000, // 30 seconds
+      enabled: debouncedQuery.length >= 3 && showSuggestions, // Use debounced query
+      staleTime: 60000, // 60 seconds
+      refetchOnWindowFocus: false,
     }
   );
 
@@ -32,7 +43,7 @@ const SearchBar = ({
       if (query.trim()) {
         onSearch(query.trim());
       }
-    }, 500); // 500ms debounce
+    }, 1000); // 1000ms debounce to reduce API calls
 
     return () => clearTimeout(timeoutId);
   }, [query, onSearch]);

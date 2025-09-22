@@ -28,11 +28,17 @@ const SongDetailPage = () => {
     async () => {
       try {
         // First try to get from local database
-        return await getSong(id);
+        console.log('🔍 Fetching from local database:', id);
+        const response = await getSong(id);
+        console.log('✅ Found in local database:', response.data?.title);
+        return response;
       } catch (err) {
         // If 404, try external API
         if (err.response?.status === 404) {
-          return await getExternalSong(id);
+          console.log('❌ Not found locally, fetching from external API:', id);
+          const externalResponse = await getExternalSong(id);
+          console.log('✅ Found in external API:', externalResponse.data?.title);
+          return externalResponse;
         }
         throw err;
       }
@@ -47,10 +53,10 @@ const SongDetailPage = () => {
   const displaySong = song?.data || song;
   
   // Debug logging
-  console.log('Raw song response:', song);
-  console.log('Display song:', displaySong);
-  console.log('Song title:', displaySong?.title);
-  console.log('Song lyrics:', displaySong?.lyrics);
+  if (displaySong) {
+    console.log('🎵 Song loaded:', displaySong.title, 'by', displaySong.artist);
+    console.log('📝 Lyrics available:', !!displaySong.lyrics);
+  }
 
   // Fetch related songs
   const { data: relatedSongs = [] } = useQuery(

@@ -45,10 +45,12 @@ export const getSongs = (params = {}) => {
 };
 
 export const getSong = (id) => {
+  console.log('🌐 API Call: GET /api/songs/' + id);
   return api.get(`/songs/${id}`);
 };
 
 export const getExternalSong = (id) => {
+  console.log('🌐 API Call: GET /api/songs/external/' + id);
   return api.get(`/songs/external/${id}`);
 };
 

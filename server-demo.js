@@ -226,6 +226,13 @@ app.get('/api/search/realtime', async (req, res) => {
           includeExternal: true 
         });
         externalResults = externalData.external || [];
+        
+        // Cache the external songs for later retrieval
+        externalResults.forEach(song => {
+          if (song.externalId) {
+            externalSongCache.set(song.externalId, song);
+          }
+        });
       } catch (error) {
         console.error('Error fetching external results:', error);
         // Fallback to simulated results
@@ -459,10 +466,22 @@ app.get('/api/songs/:id', (req, res) => {
   }
 });
 
+// Store for external song data (in production, use Redis or database)
+const externalSongCache = new Map();
+
 // Get external song details by ID
 app.get('/api/songs/external/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Check if we have cached song data
+    if (externalSongCache.has(id)) {
+      const songData = externalSongCache.get(id);
+      return res.json({
+        success: true,
+        data: songData
+      });
+    }
     
     // Try to get song details from external APIs
     const externalResults = await externalAPIs.searchMultipleSources(id, 1);
@@ -498,6 +517,9 @@ app.get('/api/songs/external/:id', async (req, res) => {
         imageUrl: song.imageUrl,
         previewUrl: song.previewUrl
       };
+      
+      // Cache the song data
+      externalSongCache.set(id, songData);
       
       return res.json({
         success: true,

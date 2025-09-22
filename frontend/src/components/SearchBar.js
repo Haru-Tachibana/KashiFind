@@ -110,9 +110,6 @@ const SearchBar = ({
     <div className={`search-container relative ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
           <input
             type="text"
             value={query}
@@ -120,7 +117,7 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowSuggestionsList(true)}
             placeholder={placeholder}
-            className="input-field pl-10 pr-10 py-3 w-full text-lg"
+            className="input-field pl-4 pr-10 py-3 w-full text-lg"
             autoComplete="off"
           />
           {query && (

@@ -275,7 +275,7 @@ const SearchPage = () => {
               {error.message || 'Something went wrong while searching. Please try again.'}
             </p>
           </div>
-        ) : searchResults?.data?.length === 0 ? (
+        ) : !searchResults?.data || searchResults.data.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />
@@ -293,29 +293,16 @@ const SearchPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <p className="text-gray-600">
-                  {filters.realtime ? (
-                    <>
-                      {searchResults?.data?.total || 0} songs found
-                      {searchResults?.data?.database?.length > 0 && (
-                        <span className="ml-2 text-blue-600">
-                          ({searchResults.data.database.length} in database)
-                        </span>
-                      )}
-                      {searchResults?.data?.external?.length > 0 && (
-                        <span className="ml-2 text-green-600">
-                          ({searchResults.data.external.length} live results)
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {searchResults?.pagination?.total || 0} songs found
-                      {searchResults?.pagination?.total > 0 && (
-                        <span className="ml-2">
-                          (Page {searchResults.pagination.page} of {searchResults.pagination.pages})
-                        </span>
-                      )}
-                    </>
+                  {searchResults?.pagination?.total || searchResults?.data?.length || 0} songs found
+                  {filters.realtime && (
+                    <span className="ml-2 text-green-600">
+                      (live results)
+                    </span>
+                  )}
+                  {searchResults?.pagination?.total > 0 && (
+                    <span className="ml-2">
+                      (Page {searchResults.pagination.page} of {searchResults.pagination.pages})
+                    </span>
                   )}
                 </p>
                 {filters.realtime && (
@@ -333,34 +320,10 @@ const SearchPage = () => {
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
                 : 'space-y-4'
             }>
-              {/* Database Results */}
-              {searchResults?.data?.database?.map((song, index) => (
+              {/* Search Results */}
+              {searchResults?.data?.map((song, index) => (
                 <motion.div
-                  key={song._id || `db-${index}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <SongCard song={song} showLyrics={viewMode === 'list'} />
-                </motion.div>
-              ))}
-              
-              {/* External Results */}
-              {searchResults?.data?.external?.map((song, index) => (
-                <motion.div
-                  key={song.externalId || `ext-${index}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: (searchResults?.data?.database?.length || 0) * 0.05 + index * 0.05 }}
-                >
-                  <SongCard song={song} showLyrics={viewMode === 'list'} />
-                </motion.div>
-              ))}
-              
-              {/* Fallback for regular search results */}
-              {!searchResults?.data?.database && !searchResults?.data?.external && searchResults?.data?.map((song, index) => (
-                <motion.div
-                  key={song._id || `fallback-${index}`}
+                  key={song._id || song.externalId || `song-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}

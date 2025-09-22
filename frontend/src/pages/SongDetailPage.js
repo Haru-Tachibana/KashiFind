@@ -47,7 +47,10 @@ const SongDetailPage = () => {
   const displaySong = song?.data || song;
   
   // Debug logging
-  console.log('Song data:', displaySong);
+  console.log('Raw song response:', song);
+  console.log('Display song:', displaySong);
+  console.log('Song title:', displaySong?.title);
+  console.log('Song lyrics:', displaySong?.lyrics);
 
   // Fetch related songs
   const { data: relatedSongs = [] } = useQuery(

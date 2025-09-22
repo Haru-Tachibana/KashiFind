@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Calendar, Tag, Eye } from 'lucide-react';
+import { Music, Calendar, Tag } from 'lucide-react';
 
 const SongCard = ({ song, showLyrics = false }) => {
   const formatYear = (year) => {
@@ -56,14 +56,6 @@ const SongCard = ({ song, showLyrics = false }) => {
                   </p>
                 )}
               </div>
-              
-              {/* Popularity indicator */}
-              {song.popularity > 0 && (
-                <div className="flex items-center text-sm text-gray-100 ml-2">
-                  <Eye className="h-4 w-4 mr-1" />
-                  {song.popularity}
-                </div>
-              )}
             </div>
 
             {/* Metadata */}

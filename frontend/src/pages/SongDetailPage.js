@@ -44,7 +44,10 @@ const SongDetailPage = () => {
   );
 
   // Use the fetched song
-  const displaySong = song;
+  const displaySong = song?.data || song;
+  
+  // Debug logging
+  console.log('Song data:', displaySong);
 
   // Fetch related songs
   const { data: relatedSongs = [] } = useQuery(
@@ -130,9 +133,23 @@ const SongDetailPage = () => {
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8"
         >
           <div className="flex items-start space-x-6">
-            {/* Album Art Placeholder */}
+            {/* Album Art */}
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white">
+              {displaySong?.imageUrl ? (
+                <img 
+                  src={displaySong.imageUrl} 
+                  alt={`${displaySong.title} album art`}
+                  className="w-24 h-24 rounded-xl object-cover"
+                  onError={(e) => {
+                    // Fallback to music icon if image fails to load
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className={`w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white ${displaySong?.imageUrl ? 'hidden' : 'flex'}`}
+              >
                 <Music className="h-12 w-12" />
               </div>
             </div>

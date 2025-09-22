@@ -145,6 +145,15 @@ export const getYouTubeVideos = (songId, songTitle, artist) => {
   });
 };
 
+// Song API functions
+export const getSong = (id) => {
+  return api.get(`/songs/${id}`);
+};
+
+export const getExternalSong = (id) => {
+  return api.get(`/songs/external/${id}`);
+};
+
 // Health check
 export const healthCheck = () => {
   return api.get('/health');

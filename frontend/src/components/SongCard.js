@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Calendar, Tag } from 'lucide-react';
+import { Music, Calendar } from 'lucide-react';
 
 const SongCard = ({ song, showLyrics = false }) => {
   const formatYear = (year) => {
@@ -70,12 +70,6 @@ const SongCard = ({ song, showLyrics = false }) => {
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
                   {formatYear(song.year)}
-                </div>
-              )}
-              {song.genre && (
-                <div className="flex items-center">
-                  <Tag className="h-4 w-4 mr-1" />
-                  {song.genre}
                 </div>
               )}
             </div>

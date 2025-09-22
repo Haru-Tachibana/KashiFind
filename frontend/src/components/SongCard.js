@@ -12,9 +12,15 @@ const SongCard = ({ song, showLyrics = false }) => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  // Determine the correct ID for routing
+  const songId = song._id || song.externalId || song.id;
+  
+  // Debug logging
+  console.log('SongCard - Song:', song.title, 'ID:', songId, 'ExternalId:', song.externalId);
+  
   return (
     <Link 
-      to={`/song/${song._id || song.externalId || song.id}`}
+      to={`/song/${songId}`}
       className="block group"
     >
       <div className="card hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">

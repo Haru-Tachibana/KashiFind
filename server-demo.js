@@ -244,7 +244,11 @@ app.get('/api/search/realtime', async (req, res) => {
         // Cache the external songs for later retrieval
         externalResults.forEach(song => {
           if (song.externalId) {
+            // Cache with both externalId and a generated ID for flexibility
+            const cacheId = `ext_${song.externalId}`;
             externalSongCache.set(song.externalId, song);
+            externalSongCache.set(cacheId, song);
+            console.log(`Cached song: ${song.title} with ID: ${song.externalId} and cacheId: ${cacheId}`);
           }
         });
       } catch (error) {
@@ -494,14 +498,42 @@ app.get('/api/songs/external/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
+    console.log(`Looking for external song with ID: ${id}`);
+    console.log(`Cache keys:`, Array.from(externalSongCache.keys()));
+    
     // Check if we have cached song data
     if (externalSongCache.has(id)) {
       const songData = externalSongCache.get(id);
+      console.log(`Found cached song:`, songData.title);
       return res.json({
         success: true,
         data: songData
       });
     }
+    
+    // Try to find by externalId in cache
+    for (const [key, song] of externalSongCache.entries()) {
+      if (song.externalId === id || key === id) {
+        console.log(`Found song by externalId:`, song.title);
+        return res.json({
+          success: true,
+          data: song
+        });
+      }
+    }
+    
+    // Try to find by prefixed ID (ext_)
+    const prefixedId = `ext_${id}`;
+    if (externalSongCache.has(prefixedId)) {
+      const songData = externalSongCache.get(prefixedId);
+      console.log(`Found song by prefixed ID:`, songData.title);
+      return res.json({
+        success: true,
+        data: songData
+      });
+    }
+    
+    console.log(`Song not found in cache, searching external APIs for: ${id}`);
     
     // Try to get song details from external APIs
     const externalResults = await externalAPIs.searchMultipleSources(id, 1);

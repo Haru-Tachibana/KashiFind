@@ -301,6 +301,59 @@ class ExternalAPIs {
     }
   }
 
+  // Fetch real lyrics from lyrics API
+  async getLyrics(songTitle, artist) {
+    try {
+      console.log(`Fetching lyrics for: "${songTitle}" by ${artist}`);
+      
+      // Try multiple lyrics APIs for better coverage
+      const lyricsAPIs = [
+        `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(songTitle)}`,
+        `https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?q_track=${encodeURIComponent(songTitle)}&q_artist=${encodeURIComponent(artist)}&apikey=${this.geniusAPIKey}`,
+        `https://api.genius.com/search?q=${encodeURIComponent(songTitle)} ${encodeURIComponent(artist)}`
+      ];
+
+      for (const apiUrl of lyricsAPIs) {
+        try {
+          const response = await fetch(apiUrl);
+          if (response.ok) {
+            const data = await response.json();
+            
+            // Parse different API responses
+            let lyrics = null;
+            if (data.lyrics) {
+              lyrics = data.lyrics;
+            } else if (data.message?.body?.lyrics?.lyrics_body) {
+              lyrics = data.message.body.lyrics.lyrics_body;
+            } else if (data.response?.hits?.[0]?.result?.url) {
+              // For Genius, we'd need to scrape the lyrics from the URL
+              lyrics = await this.scrapeLyrics(data.response.hits[0].result.url);
+            }
+            
+            if (lyrics && lyrics.length > 50) {
+              console.log(`Found lyrics from ${apiUrl}`);
+              return {
+                original: lyrics,
+                hiragana: this.generateHiragana(songTitle, artist), // Generate hiragana
+                romaji: this.generateRomaji(songTitle, artist) // Generate romaji
+              };
+            }
+          }
+        } catch (apiError) {
+          console.log(`API ${apiUrl} failed:`, apiError.message);
+          continue;
+        }
+      }
+      
+      // If no lyrics found, return null
+      console.log(`No lyrics found for "${songTitle}" by ${artist}`);
+      return null;
+    } catch (error) {
+      console.error('Error fetching lyrics:', error);
+      return null;
+    }
+  }
+
   // Real-time search with external APIs
   async searchRealtime(query, options = {}) {
     const { limit = 20, includeExternal = true } = options;
@@ -313,14 +366,11 @@ class ExternalAPIs {
       // Search external sources
       const externalResults = await this.searchMultipleSources(query, limit);
       
-      // Add more realistic data for demonstration
+      // Use real Spotify data without generating random lyrics
       const enhancedResults = externalResults.map(song => ({
         ...song,
-        lyrics: {
-          original: this.generateSampleLyrics(song.title, song.artist),
-          hiragana: this.generateHiragana(song.title, song.artist),
-          romaji: this.generateRomaji(song.title, song.artist)
-        },
+        // Don't generate random lyrics - we'll fetch real ones when needed
+        lyrics: null, // Will be fetched when song is clicked
         genre: song.genre || 'J-POP',
         year: song.year || new Date().getFullYear(),
         tags: this.generateTags(song.genre),

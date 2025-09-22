@@ -525,6 +525,36 @@ app.get('/api/songs/external/:id', async (req, res) => {
     for (const [key, song] of externalSongCache.entries()) {
       if (song.externalId === id || key === id) {
         console.log(`Found song by externalId:`, song.title);
+        
+        // If lyrics are not available, fetch them
+        if (!song.lyrics) {
+          console.log(`Fetching real lyrics for: ${song.title} by ${song.artist}`);
+          try {
+            const lyrics = await externalAPIs.getLyrics(song.title, song.artist);
+            if (lyrics) {
+              song.lyrics = lyrics;
+              // Update the cache with lyrics
+              externalSongCache.set(key, song);
+              console.log(`Updated cache with real lyrics for: ${song.title}`);
+            } else {
+              // Fallback to sample lyrics if no real lyrics found
+              song.lyrics = {
+                original: `これは「${song.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${song.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
+                hiragana: `これは「${song.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${song.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
+                romaji: `kore wa "${song.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${song.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+              };
+            }
+          } catch (lyricsError) {
+            console.error('Error fetching lyrics:', lyricsError);
+            // Fallback to sample lyrics
+            song.lyrics = {
+              original: `これは「${song.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${song.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
+              hiragana: `これは「${song.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${song.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
+              romaji: `kore wa "${song.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${song.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+            };
+          }
+        }
+        
         console.log(`Found song lyrics:`, song.lyrics?.original?.substring(0, 50) + '...');
         return res.json({
           success: true,
@@ -538,6 +568,36 @@ app.get('/api/songs/external/:id', async (req, res) => {
     if (externalSongCache.has(prefixedId)) {
       const songData = externalSongCache.get(prefixedId);
       console.log(`Found song by prefixed ID:`, songData.title);
+      
+      // If lyrics are not available, fetch them
+      if (!songData.lyrics) {
+        console.log(`Fetching real lyrics for: ${songData.title} by ${songData.artist}`);
+        try {
+          const lyrics = await externalAPIs.getLyrics(songData.title, songData.artist);
+          if (lyrics) {
+            songData.lyrics = lyrics;
+            // Update the cache with lyrics
+            externalSongCache.set(prefixedId, songData);
+            console.log(`Updated cache with real lyrics for: ${songData.title}`);
+          } else {
+            // Fallback to sample lyrics if no real lyrics found
+            songData.lyrics = {
+              original: `これは「${songData.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${songData.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
+              hiragana: `これは「${songData.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${songData.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
+              romaji: `kore wa "${songData.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${songData.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+            };
+          }
+        } catch (lyricsError) {
+          console.error('Error fetching lyrics:', lyricsError);
+          // Fallback to sample lyrics
+          songData.lyrics = {
+            original: `これは「${songData.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${songData.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
+            hiragana: `これは「${songData.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${songData.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
+            romaji: `kore wa "${songData.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${songData.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+          };
+        }
+      }
+      
       return res.json({
         success: true,
         data: songData

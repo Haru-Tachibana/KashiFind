@@ -19,9 +19,23 @@ const SongCard = ({ song, showLyrics = false }) => {
     >
       <div className="card hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
         <div className="flex items-start space-x-4">
-          {/* Album/Artist Icon */}
+          {/* Album Art */}
           <div className="flex-shrink-0">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white">
+            {song.imageUrl ? (
+              <img 
+                src={song.imageUrl} 
+                alt={`${song.title} album art`}
+                className="w-16 h-16 rounded-lg object-cover"
+                onError={(e) => {
+                  // Fallback to music icon if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className={`w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white ${song.imageUrl ? 'hidden' : 'flex'}`}
+            >
               <Music className="h-8 w-8" />
             </div>
           </div>
@@ -77,24 +91,6 @@ const SongCard = ({ song, showLyrics = false }) => {
               </div>
             )}
 
-            {/* Tags */}
-            {song.tags && song.tags.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {song.tags.slice(0, 3).map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-block px-2 py-1 text-xs bg-gray-600 text-white rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {song.tags.length > 3 && (
-                  <span className="inline-block px-2 py-1 text-xs bg-gray-600 text-white rounded-full">
-                    +{song.tags.length - 3} more
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

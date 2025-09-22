@@ -17,6 +17,7 @@ const SongCard = ({ song, showLyrics = false }) => {
   
   // Debug logging
   console.log('SongCard - Song:', song.title, 'ID:', songId, 'ExternalId:', song.externalId);
+  console.log('SongCard - Full song object:', song);
   
   return (
     <Link 

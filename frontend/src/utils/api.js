@@ -145,10 +145,6 @@ export const getYouTubeVideos = (songId, songTitle, artist) => {
   });
 };
 
-// External song API function
-export const getExternalSong = (id) => {
-  return api.get(`/songs/external/${id}`);
-};
 
 // Health check
 export const healthCheck = () => {

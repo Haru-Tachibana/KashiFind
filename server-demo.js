@@ -280,12 +280,17 @@ app.get('/api/search/realtime', async (req, res) => {
       }
     }
     
+    // Combine results
+    const allResults = [...dbResults.data, ...externalResults];
+    
     res.json({
       success: true,
-      data: {
-        database: dbResults.data,
-        external: externalResults,
-        total: dbResults.data.length + externalResults.length
+      data: allResults,
+      pagination: {
+        page: 1,
+        limit: parseInt(limit),
+        total: allResults.length,
+        pages: Math.ceil(allResults.length / parseInt(limit))
       },
       query: finalQuery,
       timestamp: new Date().toISOString()

@@ -242,6 +242,7 @@ app.get('/api/search/realtime', async (req, res) => {
         externalResults = externalData.external || [];
         
         // Cache the external songs for later retrieval
+        console.log(`Caching ${externalResults.length} external songs...`);
         externalResults.forEach(song => {
           if (song.externalId) {
             // Cache with both externalId and a generated ID for flexibility
@@ -251,6 +252,7 @@ app.get('/api/search/realtime', async (req, res) => {
             console.log(`Cached song: ${song.title} with ID: ${song.externalId} and cacheId: ${cacheId}`);
           }
         });
+        console.log(`Total cached songs: ${externalSongCache.size}`);
       } catch (error) {
         console.error('Error fetching external results:', error);
         

@@ -16,11 +16,26 @@ import LyricsDisplay from '../components/LyricsDisplay';
 import SongCard from '../components/SongCard';
 import YouTubePlayer from '../components/YouTubePlayer';
 import { getSong, getExternalSong, getRelatedSongs } from '../utils/api';
+import { useAutoTextColor } from '../hooks/useAutoTextColor';
 
 const SongDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lyricsFormat, setLyricsFormat] = useState('original');
+  const [backgroundImage, setBackgroundImage] = useState(localStorage.getItem('kashifind-background') || '');
+  
+  // Auto text color detection
+  const { textColors, isLoading: colorLoading } = useAutoTextColor(backgroundImage);
+  
+  // Listen for background changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setBackgroundImage(localStorage.getItem('kashifind-background') || '');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   
   // Debug logging for received ID
   console.log('🆔 SongDetailPage received ID:', id);
@@ -72,7 +87,7 @@ const SongDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading song details...</p>
+          <p className={textColors.primary}>Loading song details...</p>
         </div>
       </div>
     );
@@ -85,10 +100,10 @@ const SongDetailPage = () => {
           <div className="text-red-500 mb-4">
             <Music className="h-12 w-12 mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className={`text-lg font-medium ${textColors.primary} mb-2`}>
             Song Not Found
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className={`${textColors.secondary} mb-4`}>
             The song you're looking for doesn't exist or has been removed.
           </p>
           <button
@@ -122,14 +137,13 @@ const SongDetailPage = () => {
     };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate(-1)}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className={`flex items-center ${textColors.secondary} hover:${textColors.primary} mb-6 transition-colors`}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
@@ -165,21 +179,21 @@ const SongDetailPage = () => {
 
             {/* Song Info */}
             <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-gray-900 japanese-text mb-2">
+            <h1 className={`text-3xl font-bold ${textColors.primary} japanese-text mb-2`}>
               {displaySong.title}
             </h1>
-            <p className="text-xl text-gray-600 font-medium mb-4">
+            <p className={`text-xl ${textColors.secondary} font-medium mb-4`}>
               {displaySong.artist}
             </p>
             
             {displaySong.album && (
-              <p className="text-lg text-gray-500 mb-4">
+              <p className={`text-lg ${textColors.muted} mb-4`}>
                 {displaySong.album}
               </p>
             )}
 
               {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <div className={`flex flex-wrap items-center gap-4 text-sm ${textColors.muted}`}>
                 {displaySong.year && (
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
@@ -309,7 +323,6 @@ const SongDetailPage = () => {
             </div>
           </motion.div>
         )}
-      </div>
     </div>
   );
 };

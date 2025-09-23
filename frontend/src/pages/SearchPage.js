@@ -12,6 +12,7 @@ import {
 import SearchBar from '../components/SearchBar';
 import SongCard from '../components/SongCard';
 import { searchSongs, searchSongsRealtime, getGenres, getYears } from '../utils/api';
+import { useAutoTextColor } from '../hooks/useAutoTextColor';
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,6 +30,20 @@ const SearchPage = () => {
   
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [backgroundImage, setBackgroundImage] = useState(localStorage.getItem('kashifind-background') || '');
+
+  // Auto text color detection
+  const { textColors, isLoading: colorLoading } = useAutoTextColor(backgroundImage);
+
+  // Listen for background changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setBackgroundImage(localStorage.getItem('kashifind-background') || '');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Fetch search results
   const { data: searchResults, isLoading, error } = useQuery(
@@ -101,11 +116,10 @@ const SearchPage = () => {
   const hasActiveFilters = filters.type !== 'all' || filters.genre || filters.year || filters.sortBy !== 'relevance';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          <h1 className={`text-3xl font-bold ${textColors.primary} mb-6`}>
             {filters.query ? `Search Results for "${filters.query}"` : 'Search Songs'}
           </h1>
           
@@ -147,13 +161,13 @@ const SearchPage = () => {
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -173,7 +187,7 @@ const SearchPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium ${textColors.primary} mb-2`}>
                   Search In
                 </label>
                 <select
@@ -190,7 +204,7 @@ const SearchPage = () => {
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium ${textColors.primary} mb-2`}>
                   Sort By
                 </label>
                 <select
@@ -209,7 +223,7 @@ const SearchPage = () => {
 
               {/* Genre */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium ${textColors.primary} mb-2`}>
                   Genre
                 </label>
                 <select
@@ -226,7 +240,7 @@ const SearchPage = () => {
 
               {/* Year */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium ${textColors.primary} mb-2`}>
                   Year
                 </label>
                 <select
@@ -260,7 +274,7 @@ const SearchPage = () => {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="loading-spinner mx-auto mb-4"></div>
-              <p className="text-gray-600">Searching for songs...</p>
+              <p className={textColors.primary}>Searching for songs...</p>
             </div>
           </div>
         ) : error ? (
@@ -268,22 +282,22 @@ const SearchPage = () => {
             <div className="text-red-500 mb-4">
               <Music className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className={`text-lg font-medium ${textColors.primary} mb-2`}>
               Search Error
             </h3>
-            <p className="text-gray-600">
+            <p className={textColors.secondary}>
               {error.message || 'Something went wrong while searching. Please try again.'}
             </p>
           </div>
         ) : !searchResults?.data || searchResults.data.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-white/60 mb-4">
               <Search className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className={`text-lg font-medium ${textColors.primary} mb-2`}>
               No songs found
             </h3>
-            <p className="text-gray-600">
+            <p className={textColors.secondary}>
               Try adjusting your search terms or filters to find more results.
             </p>
           </div>
@@ -292,7 +306,7 @@ const SearchPage = () => {
             {/* Results Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
-                <p className="text-gray-600">
+                <p className={textColors.secondary}>
                   {searchResults?.pagination?.total || searchResults?.data?.length || 0} songs found
                   {filters.realtime && (
                     <span className="ml-2 text-green-600">
@@ -340,7 +354,7 @@ const SearchPage = () => {
                   <button
                     onClick={() => handlePageChange(filters.page - 1)}
                     disabled={filters.page <= 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
@@ -354,7 +368,7 @@ const SearchPage = () => {
                         className={`px-3 py-2 text-sm font-medium rounded-lg ${
                           filters.page === pageNum
                             ? 'bg-primary-600 text-white'
-                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            : 'text-white bg-white/10 border border-white/20 hover:bg-white/20'
                         }`}
                       >
                         {pageNum}
@@ -365,7 +379,7 @@ const SearchPage = () => {
                   <button
                     onClick={() => handlePageChange(filters.page + 1)}
                     disabled={filters.page >= searchResults.pagination.pages}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -374,7 +388,6 @@ const SearchPage = () => {
             )}
           </>
         )}
-      </div>
     </div>
   );
 };

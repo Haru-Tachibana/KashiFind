@@ -227,31 +227,71 @@ class ExternalAPIs {
     }
   }
 
-  // Search YouTube for music videos
+  // Search YouTube for music videos using SerpApi
   async searchYouTube(query, limit = 5) {
     try {
-      if (!this.youtubeAPIKey) {
-        console.log('No YouTube API key available');
-        return [];
-      }
-
       console.log(`Searching YouTube for: "${query}"`);
-      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query + ' music video')}&type=video&maxResults=${limit}&key=${this.youtubeAPIKey}`);
+      const searchQuery = `${query} music video`;
       
-      if (!response.ok) {
-        console.error(`YouTube API error: ${response.status} ${response.statusText}`);
-        return [];
+      // Try SerpApi first (more reliable, no API key needed for basic usage)
+      try {
+        const serpApiUrl = `https://serpapi.com/search.json?engine=youtube&search_query=${encodeURIComponent(searchQuery)}&gl=us&hl=en&num=${limit}`;
+        
+        console.log(`Trying SerpApi YouTube...`);
+        const response = await fetch(serpApiUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`SerpApi returned ${data.video_results?.length || 0} results`);
+          
+          if (data.video_results && data.video_results.length > 0) {
+            return data.video_results.map(item => ({
+              id: item.video_id,
+              title: item.title,
+              channel: item.channel?.name || 'Unknown Channel',
+              thumbnail: item.thumbnail?.static || item.thumbnail?.default,
+              url: item.link,
+              source: 'youtube'
+            }));
+          }
+        } else {
+          console.log(`SerpApi returned ${response.status}: ${response.statusText}`);
+        }
+      } catch (serpError) {
+        console.log(`SerpApi failed:`, serpError.message);
       }
-
-      const data = await response.json();
-      return data.items?.map(item => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        channel: item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-        url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        source: 'youtube'
-      })) || [];
+      
+      // Fallback to YouTube Data API v3 if SerpApi fails
+      if (this.youtubeAPIKey) {
+        console.log(`Falling back to YouTube Data API v3...`);
+        const youtubeUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=${limit}&key=${this.youtubeAPIKey}`;
+        
+        const response = await fetch(youtubeUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`YouTube API returned ${data.items?.length || 0} results`);
+          
+          return data.items?.map(item => ({
+            id: item.id.videoId,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            source: 'youtube'
+          })) || [];
+        } else {
+          console.log(`YouTube API returned ${response.status}: ${response.statusText}`);
+        }
+      } else {
+        console.log('No YouTube API key available for fallback');
+      }
+      
+      return [];
     } catch (error) {
       console.error('Error searching YouTube:', error);
       return [];
@@ -293,52 +333,100 @@ class ExternalAPIs {
     }
   }
 
-  // Fetch real lyrics from lyrics API
-  async getLyrics(songTitle, artist) {
+  // Fetch real lyrics from Spotify Lyrics API
+  async getLyrics(songTitle, artist, spotifyId = null) {
     try {
       console.log(`Fetching lyrics for: "${songTitle}" by ${artist}`);
       
-      // Try multiple lyrics APIs for better coverage
-      const lyricsAPIs = [
-        `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(songTitle)}`,
-        `https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?q_track=${encodeURIComponent(songTitle)}&q_artist=${encodeURIComponent(artist)}&apikey=${this.geniusAPIKey}`,
-        `https://api.genius.com/search?q=${encodeURIComponent(songTitle)} ${encodeURIComponent(artist)}`
-      ];
-
-      for (const apiUrl of lyricsAPIs) {
+      // If we have a Spotify ID, try the Spotify Lyrics API first
+      if (spotifyId) {
         try {
-          const response = await fetch(apiUrl);
+          const spotifyUrl = `https://open.spotify.com/track/${spotifyId}`;
+          const lyricsApiUrl = `https://spotify-lyric-api.herokuapp.com/?url=${encodeURIComponent(spotifyUrl)}`;
+          
+          console.log(`Trying Spotify Lyrics API...`);
+          const response = await fetch(lyricsApiUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
+          
           if (response.ok) {
             const data = await response.json();
             
-            // Parse different API responses
-            let lyrics = null;
-            if (data.lyrics) {
-              lyrics = data.lyrics;
-            } else if (data.message?.body?.lyrics?.lyrics_body) {
-              lyrics = data.message.body.lyrics.lyrics_body;
-            } else if (data.response?.hits?.[0]?.result?.url) {
-              // For Genius, we'd need to scrape the lyrics from the URL
-              lyrics = await this.scrapeLyrics(data.response.hits[0].result.url);
+            if (!data.error && data.lines && data.lines.length > 0) {
+              // Convert synced lyrics to plain text
+              const lyricsText = data.lines.map(line => line.words).join('\n');
+              
+              if (lyricsText && lyricsText.length > 50) {
+                console.log(`✅ Found lyrics from Spotify Lyrics API`);
+                return {
+                  original: lyricsText,
+                  hiragana: this.generateHiragana(lyricsText),
+                  romaji: this.generateRomaji(lyricsText),
+                  synced: data.lines // Keep synced data for future use
+                };
+              }
             }
+          } else {
+            console.log(`Spotify Lyrics API returned ${response.status}: ${response.statusText}`);
+          }
+        } catch (spotifyError) {
+          console.log(`Spotify Lyrics API failed:`, spotifyError.message);
+        }
+      }
+      
+      // Fallback to other APIs
+      const lyricsAPIs = [
+        {
+          name: 'lyrics.ovh',
+          url: `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(songTitle)}`,
+          parser: (data) => data.lyrics
+        },
+        {
+          name: 'genius',
+          url: `https://api.genius.com/search?q=${encodeURIComponent(songTitle)} ${encodeURIComponent(artist)}`,
+          parser: async (data) => {
+            if (data.response?.hits?.[0]?.result?.url) {
+              return await this.scrapeLyrics(data.response.hits[0].result.url);
+            }
+            return null;
+          }
+        }
+      ];
+
+      for (const api of lyricsAPIs) {
+        try {
+          console.log(`Trying ${api.name}...`);
+          const response = await fetch(api.url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const lyrics = await api.parser(data);
             
             if (lyrics && lyrics.length > 50) {
-              console.log(`Found lyrics from ${apiUrl}`);
+              console.log(`✅ Found lyrics from ${api.name}`);
               return {
                 original: lyrics,
-                hiragana: this.generateHiragana(songTitle, artist), // Generate hiragana
-                romaji: this.generateRomaji(songTitle, artist) // Generate romaji
+                hiragana: this.generateHiragana(lyrics),
+                romaji: this.generateRomaji(lyrics)
               };
             }
+          } else {
+            console.log(`${api.name} returned ${response.status}: ${response.statusText}`);
           }
         } catch (apiError) {
-          console.log(`API ${apiUrl} failed:`, apiError.message);
+          console.log(`${api.name} failed:`, apiError.message);
           continue;
         }
       }
       
       // If no lyrics found, return null
-      console.log(`No lyrics found for "${songTitle}" by ${artist}`);
+      console.log(`❌ No lyrics found for "${songTitle}" by ${artist}`);
       return null;
     } catch (error) {
       console.error('Error fetching lyrics:', error);
@@ -396,33 +484,46 @@ class ExternalAPIs {
     return sampleLyrics[Math.floor(Math.random() * sampleLyrics.length)];
   }
 
-  // Generate hiragana for demonstration
-  generateHiragana(title, artist) {
+  // Generate hiragana for lyrics
+  generateHiragana(lyrics) {
+    // Simple hiragana conversion for common kanji
     const hiraganaMap = {
-      '君': 'きみ',
-      'の': 'の',
-      '声': 'こえ',
-      'が': 'が',
-      '聞こえる': 'きこえる',
-      '姿': 'すがた',
-      '見える': 'みえる',
-      'こと': 'こと',
-      'を': 'を',
-      '想う': 'おもう',
-      '愛してる': 'あいしてる'
+      '君': 'きみ', 'の': 'の', '声': 'こえ', 'が': 'が', '聞こえる': 'きこえる',
+      '姿': 'すがた', '見える': 'みえる', 'こと': 'こと', 'を': 'を', '想う': 'おもう',
+      '愛してる': 'あいしてる', '夢': 'ゆめ', '夜': 'よる', '会いたい': 'あいたい',
+      '探す': 'さがす', '沈む': 'しずむ', '溶ける': 'とける', '二人': 'ふたり',
+      '空': 'そら', '広がる': 'ひろがる', 'さよなら': 'さよなら', '一言': 'ひとこと',
+      '全て': 'すべて', '分かった': 'わかった', 'あなた': 'あなた', '忘れた': 'わすれた',
+      '物': 'もの', '取り': 'とり', '帰る': 'かえる', '古びた': 'ふるびた',
+      '思い出': 'おもいで', '埃': 'ほこり', '払う': 'はらう'
     };
-    return this.generateSampleLyrics(title, artist);
+    
+    let hiragana = lyrics;
+    for (const [kanji, hira] of Object.entries(hiraganaMap)) {
+      hiragana = hiragana.replace(new RegExp(kanji, 'g'), hira);
+    }
+    return hiragana;
   }
 
-  // Generate romaji for demonstration
-  generateRomaji(title, artist) {
+  // Generate romaji for lyrics
+  generateRomaji(lyrics) {
+    // Simple romaji conversion
     const romajiMap = {
-      '君の声が聞こえる': 'kimi no koe ga kikoeru',
-      '君の姿が見える': 'kimi no sugata ga mieru',
-      '君のことを想う': 'kimi no koto wo omou',
-      '君のことを愛してる': 'kimi no koto wo aishiteru'
+      'きみ': 'kimi', 'の': 'no', 'こえ': 'koe', 'が': 'ga', 'きこえる': 'kikoeru',
+      'すがた': 'sugata', 'みえる': 'mieru', 'こと': 'koto', 'を': 'wo', 'おもう': 'omou',
+      'あいしてる': 'aishiteru', 'ゆめ': 'yume', 'よる': 'yoru', 'あいたい': 'aitai',
+      'さがす': 'sagasu', 'しずむ': 'shizumu', 'とける': 'tokeru', 'ふたり': 'futari',
+      'そら': 'sora', 'ひろがる': 'hirogaru', 'さよなら': 'sayonara', 'ひとこと': 'hitokoto',
+      'すべて': 'subete', 'わかった': 'wakatta', 'あなた': 'anata', 'わすれた': 'wasureta',
+      'もの': 'mono', 'とり': 'tori', 'かえる': 'kaeru', 'ふるびた': 'furubita',
+      'おもいで': 'omoide', 'ほこり': 'hokori', 'はらう': 'harau'
     };
-    return this.generateSampleLyrics(title, artist);
+    
+    let romaji = lyrics;
+    for (const [hira, roma] of Object.entries(romajiMap)) {
+      romaji = romaji.replace(new RegExp(hira, 'g'), roma);
+    }
+    return romaji;
   }
 
   // Generate tags based on genre

@@ -34,7 +34,7 @@ const SongCard = ({ song, showLyrics = false }) => {
       onClick={handleClick}
       className="block group cursor-pointer"
     >
-      <div className="card hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/15 hover:border-white/30 transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-2xl">
         <div className="flex items-start space-x-4">
           {/* Album Art */}
           <div className="flex-shrink-0">
@@ -42,7 +42,7 @@ const SongCard = ({ song, showLyrics = false }) => {
               <img 
                 src={song.imageUrl} 
                 alt={`${song.title} album art`}
-                className="w-16 h-16 rounded-lg object-cover"
+                className="w-16 h-16 rounded-xl object-cover shadow-lg"
                 onError={(e) => {
                   // Fallback to music icon if image fails to load
                   e.target.style.display = 'none';
@@ -51,7 +51,7 @@ const SongCard = ({ song, showLyrics = false }) => {
               />
             ) : null}
             <div 
-              className={`w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white ${song.imageUrl ? 'hidden' : 'flex'}`}
+              className={`w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg ${song.imageUrl ? 'hidden' : 'flex'}`}
             >
               <Music className="h-8 w-8" />
             </div>
@@ -61,14 +61,14 @@ const SongCard = ({ song, showLyrics = false }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors truncate">
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                   {song.title}
                 </h3>
-                <p className="text-gray-100 font-medium truncate">
+                <p className="text-gray-700 font-medium truncate">
                   {song.artist}
                 </p>
                 {song.album && (
-                  <p className="text-sm text-gray-200 truncate">
+                  <p className="text-sm text-gray-600 truncate">
                     {song.album}
                   </p>
                 )}
@@ -76,7 +76,7 @@ const SongCard = ({ song, showLyrics = false }) => {
             </div>
 
             {/* Metadata */}
-            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-100">
+            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
               {song.year && (
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -88,7 +88,7 @@ const SongCard = ({ song, showLyrics = false }) => {
             {/* Lyrics Preview */}
             {showLyrics && song.lyrics && (
               <div className="mt-3">
-                <p className="text-sm text-gray-100 japanese-text leading-relaxed">
+                <p className="text-sm text-gray-700 japanese-text leading-relaxed">
                   {truncateText(song.lyrics.original || song.lyrics)}
                 </p>
               </div>

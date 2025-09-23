@@ -1,71 +1,51 @@
-# 🎵 KashiFind - Modern Japanese Lyrics Search Engine
+# Kashi.find - Japanese Lyrics Search Platform
 
-A modern, elegant lyrics search website inspired by UtaTen but with significant improvements - **no ads**, **real-time search**, **YouTube integration**, and **smart furigana display**.
-
-![KashiFind Logo](frontend/public/logo192.svg)
+A modern, elegant Japanese lyrics search platform with glassmorphism design and customizable backgrounds.
 
 ## ✨ Features
 
-### 🔍 **Real-time Search Engine**
-- **Google-like search** with instant results as you type
-- **Real-time suggestions** with keyboard navigation
-- **External API integration** (Spotify + Genius) for comprehensive results
-- **Fuzzy matching** with intelligent scoring system
+### 🎨 **Glassmorphism Design**
+- Modern transparent UI with backdrop blur effects
+- Elegant glass-like components throughout the interface
+- Smooth animations and transitions
 
-### 🎌 **Japanese Text Processing**
-- **Smart furigana display** - only shows furigana above kanji characters
-- **UtaTen-style layout** - smaller, lighter furigana text above kanji
-- **Multiple text formats** - original, hiragana, and romaji
-- **Intelligent text processing** - compares original and furigana lyrics
+### 🖼️ **Customizable Backgrounds**
+- Upload your own background images
+- Preset gradient backgrounds
+- Real-time background preview
+- Background settings persist across sessions
 
-### 🎬 **YouTube Integration**
-- **Automatic video search** for each song
-- **Embedded YouTube player** with multiple video options
-- **"Watch on YouTube"** button for external viewing
-- **Real-time video fetching** based on song title and artist
+### 🔍 **Advanced Search**
+- Real-time search with instant suggestions
+- Search by song title, artist, or lyrics
+- External API integration (Spotify, Genius)
+- Intelligent search algorithms
 
-### 🎨 **Modern Design**
-- **Clean, ad-free interface** - no distracting advertisements
-- **Responsive design** - works on desktop, tablet, and mobile
-- **Dark theme** with elegant typography
-- **Smooth animations** and transitions
+### 📚 **Japanese Language Support**
+- Furigana display above kanji characters
+- Romaji conversion for pronunciation
+- Smart furigana that only shows for kanji (not hiragana)
+- Multiple display modes for learning
 
-### 🚀 **Technical Features**
-- **Real-time search** with debounced input
-- **External API fallbacks** for reliable results
-- **Dynamic content** - different songs show different lyrics
-- **Modern tech stack** - React, Node.js, Express, MongoDB
+### 🎵 **Rich Song Data**
+- Album artwork from Spotify
+- Song metadata (year, genre, duration)
+- Lyrics with multiple formats
+- YouTube video integration
 
-## 🛠️ Tech Stack
+### 📱 **Responsive Design**
+- Mobile-first approach
+- Touch-friendly interface
+- Optimized for all screen sizes
+- Smooth mobile navigation
 
-### **Frontend**
-- **React 18** with hooks and functional components
-- **React Router** for navigation
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **React Query** for data fetching
-- **Axios** for API calls
+## 🚀 Getting Started
 
-### **Backend**
-- **Node.js** with Express.js
-- **MongoDB** with Mongoose
-- **External APIs** (Spotify, Genius, YouTube)
-- **Rate limiting** and security middleware
-- **CORS** and compression
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
 
-### **APIs Integrated**
-- **Spotify Web API** - for music search and metadata
-- **Genius API** - for lyrics and song information
-- **YouTube Data API v3** - for video search and embedding
-
-## 🚀 Quick Start
-
-### **Prerequisites**
-- Node.js (v14 or higher)
-- MongoDB (or MongoDB Atlas)
-- API keys for Spotify, Genius, and YouTube
-
-### **Installation**
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -75,127 +55,174 @@ A modern, elegant lyrics search website inspired by UtaTen but with significant 
 
 2. **Install dependencies**
    ```bash
-   # Backend dependencies
+   # Backend
+   cd backend
    npm install
    
-   # Frontend dependencies
-   cd frontend
+   # Frontend
+   cd ../frontend
    npm install
-   cd ..
    ```
 
-3. **Set up environment variables**
+3. **Environment Setup**
    ```bash
-   cp .env.example .env
-   ```
+   # Copy environment template
+   cp env.template .env
    
-   Edit `.env` with your API keys:
-   ```env
-   # Database
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/kashifind
-   
-   # Server
-   PORT=3001
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:3000
-   
-   # JWT
-   JWT_SECRET=your_jwt_secret_here
-   JWT_EXPIRES_IN=7d
-   
-   # External APIs
-   SPOTIFY_CLIENT_ID=your_spotify_client_id
-   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-   GENIUS_API_KEY=your_genius_api_key
-   YOUTUBE_API_KEY=your_youtube_api_key
+   # Edit .env with your API keys
+   nano .env
    ```
 
 4. **Start the application**
    ```bash
-   # Start backend server
+   # Terminal 1 - Backend
+   cd backend
    npm run dev
    
-   # In another terminal, start frontend
+   # Terminal 2 - Frontend
    cd frontend
    npm start
    ```
 
-5. **Open your browser**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001/api
+## 🔧 Configuration
+
+### Required API Keys
+
+Add these to your `.env` file:
+
+```env
+# Spotify API
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+
+# Genius API
+GENIUS_ACCESS_TOKEN=your_genius_access_token
+
+# YouTube API (Optional)
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+### API Key Setup
+
+1. **Spotify API**
+   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Create a new app
+   - Get Client ID and Client Secret
+
+2. **Genius API**
+   - Visit [Genius API](https://genius.com/api-clients)
+   - Create an account and get access token
+
+3. **YouTube API** (Optional)
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Enable YouTube Data API v3
+   - Create API key
+
+## 🎨 Customization
+
+### Background Customization
+- Click the "Customize" button in the header
+- Upload your own images or choose from presets
+- Backgrounds are automatically saved to localStorage
+
+### UI Themes
+The app uses a glassmorphism design system with:
+- Semi-transparent components
+- Backdrop blur effects
+- White text with opacity variations
+- Gradient accents
 
 ## 📁 Project Structure
 
 ```
 KashiFind/
-├── frontend/                 # React frontend application
-│   ├── public/              # Static assets
+├── frontend/                 # React frontend
 │   ├── src/
-│   │   ├── components/      # Reusable React components
+│   │   ├── components/      # Reusable components
 │   │   ├── pages/          # Page components
-│   │   ├── utils/          # Utility functions and API calls
-│   │   └── App.js          # Main App component
+│   │   ├── utils/          # Utility functions
+│   │   └── App.js          # Main app component
 │   └── package.json
-├── models/                  # Mongoose data models
-├── routes/                  # Express API routes
-├── utils/                   # Backend utilities
-├── server.js               # Main server file
-├── server-demo.js          # Demo server (no MongoDB required)
-└── package.json
+├── backend/                 # Node.js backend
+│   ├── server-demo.js      # Main server file
+│   ├── utils/              # Utility functions
+│   └── package.json
+├── .env                    # Environment variables
+└── README.md
 ```
 
-## 🔧 API Endpoints
+## 🔍 API Endpoints
 
-### **Search Endpoints**
-- `GET /api/search` - Advanced search with filters
-- `GET /api/search/realtime` - Real-time search with external APIs
+### Search
+- `GET /api/search/realtime` - Real-time search
 - `GET /api/search/suggestions` - Search suggestions
-- `GET /api/search/trending` - Trending songs
-- `GET /api/search/genres` - Available genres
-- `GET /api/search/years` - Available years
 
-### **Song Endpoints**
-- `GET /api/songs` - Get all songs
-- `GET /api/songs/:id` - Get song by ID
-- `GET /api/songs/:id/youtube` - Get YouTube videos for song
-- `GET /api/lyrics/:id` - Get lyrics in different formats
+### Songs
+- `GET /api/songs/external/:id` - Get song details
+- `GET /api/songs/:id/youtube` - Get YouTube videos
 
-## 🎯 Key Features Explained
+### Lyrics
+- `GET /api/lyrics/popular` - Popular lyrics
+- `GET /api/lyrics/trending` - Trending lyrics
 
-### **Smart Furigana Display**
-The application intelligently displays furigana only above kanji characters, not above hiragana or katakana. This creates a clean, readable layout similar to UtaTen.
+## 🛠️ Development
 
-### **Real-time Search**
-Search results update instantly as you type, with intelligent suggestions and external API integration for comprehensive results.
+### Available Scripts
 
-### **YouTube Integration**
-Each song automatically searches for and displays relevant YouTube videos, providing a complete music experience.
+**Frontend:**
+```bash
+npm start          # Start development server
+npm run build      # Build for production
+npm test           # Run tests
+```
 
-### **Dynamic Content**
-Different external songs show different sample lyrics and metadata, creating a realistic demonstration experience.
+**Backend:**
+```bash
+npm run dev        # Start with nodemon
+npm start          # Start production server
+```
+
+### Code Style
+- ESLint for code linting
+- Prettier for code formatting
+- Consistent component structure
+
+## 🚀 Deployment
+
+### Frontend (Vercel/Netlify)
+1. Build the frontend: `npm run build`
+2. Deploy the `build` folder
+3. Set environment variables in deployment platform
+
+### Backend (Railway/Heroku)
+1. Set environment variables
+2. Deploy the backend folder
+3. Update frontend API URLs
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Inspired by [UtaTen](https://utaten.com/) for the furigana display concept
-- Built with modern web technologies for optimal performance
-- External API integration for comprehensive music data
+- Spotify API for music data
+- Genius API for lyrics
+- YouTube API for video integration
+- React and Node.js communities
+- Japanese music and language learning communities
 
 ## 📞 Support
 
-If you have any questions or need help, please open an issue on GitHub.
+For support, email support@kashifind.com or create an issue on GitHub.
 
 ---
 
-**KashiFind** - Find your favorite Japanese lyrics with style! 🎵✨
+**Kashi.find** - Discover Japanese music through beautiful lyrics ✨

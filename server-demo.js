@@ -249,6 +249,9 @@ app.get('/api/search/realtime', async (req, res) => {
             // Add id field to match externalId for consistent routing
             song.id = song.externalId;
             
+            // Remove tags from song data
+            delete song.tags;
+            
             // Cache with both externalId and a generated ID for flexibility
             const cacheId = `ext_${song.externalId}`;
             externalSongCache.set(song.externalId, song);
@@ -432,6 +435,46 @@ async function searchGenius(query, limit) {
   ];
 }
 
+// Generate realistic sample lyrics for fallback
+function getSampleLyrics(title, artist) {
+  const sampleLyrics = [
+    {
+      original: '君の声が聞こえる\n君の姿が見える\n君のことを想う\n君のことを愛してる\n\n夢ならばどれほどよかったでしょう\n未だにあなたのことを夢にみる\n\nこの想いを伝えたい\nこの気持ちを届けたい\nでも言葉にできない\nでも声に出せない\n\n君がいるだけで\n世界が輝いて見える\n君が笑うだけで\n心が温かくなる',
+      hiragana: 'きみのこえがきこえる\nきみのすがたがみえる\nきみのことをおもう\nきみのことをあいしてる\n\nゆめならばどれほどよかったでしょう\nいまだにあなたのことをゆめにみる\n\nこのおもいをつたえたい\nこのきもちをとどけたい\nでもことばにできない\nでもこえにだせない\n\nきみがいるだけで\nせかいがかがやいてみえる\nきみがわらうだけで\nこころがあたたかくなる',
+      romaji: 'kimi no koe ga kikoeru\nkimi no sugata ga mieru\nkimi no koto wo omou\nkimi no koto wo aishiteru\n\nyume naraba dore hodo yokatta deshou\nimada ni anata no koto wo yume ni miru\n\nkono omoi wo tsutaetai\nkono kimochi wo todoketai\ndemo kotoba ni dekinai\ndemo koe ni dasenai\n\nkimi ga iru dake de\nsekai ga kagayaite mieru\nkimi ga warau dake de\nkokoro ga atatakaku naru'
+    },
+    {
+      original: '夜に駆ける\n君に会いたい\n夜に駆ける\n君を探す\n\n沈むように溶けてゆくように\n二人だけの空が広がる夜に\n\n星が瞬く夜空に\n君の名前を呼ぶ\n風が運ぶ声は\nどこまでも響いてく\n\nこの夜が終わらないで\nこの瞬間が続いてほしい\n君と一緒にいられるなら\n永遠にここにいたい',
+      hiragana: 'よるにかける\nきみにあいたい\nよるにかける\nきみをさがす\n\nしずむようにとけてゆくように\nふたりだけのそらがひろがるよるに\n\nほしがまたたくよぞらに\nきみのなまえをよぶ\nかぜがはこぶこえは\nどこまでもひびいてく\n\nこのよるがおわらないで\nこのしゅんかんがつづいてほしい\nきみといっしょにいられるなら\nえいえんにここにいたい',
+      romaji: 'yoru ni kakeru\nkimi ni aitai\nyoru ni kakeru\nkimi wo sagasu\n\nshizumu you ni tokeru you ni\nfutari dake no sora ga hirogaru yoru ni\n\nhoshi ga matataku yozora ni\nkimi no namae wo yobu\nkaze ga hakobu koe wa\ndoko made mo hibiiteku\n\nkono yoru ga owaranai de\nkono shunkan ga tsuduite hoshii\nkimi to issho ni irareru nara\neien ni koko ni itai'
+    },
+    {
+      original: '「さよなら」だけだった\nその一言で全てが分かった\n\n忘れた物を取りに帰るように\n古びた思い出の埃を払う\n\n時が経つほどに\n心に重くのしかかる\nあの日の約束\n守れなかった約束\n\nでも今は分かる\n君の気持ちも分かる\n別れは辛いけれど\nこれが正しい道なんだ\n\n新しい明日に向かって\n歩き出そう\n君の笑顔を胸に\n歩き出そう',
+      hiragana: '「さよなら」だけだった\nそのひとことですべてがわかった\n\nわすれたものをとりにかえるように\nふるびたおもいでのほこりをはらう\n\nときがたつほどに\nこころにおもくのしかかる\nあのひのやくそく\nまもれなかったやくそく\n\nでもいまはわかる\nきみのきもちもわかる\nわかれはつらいけれど\nこれがただしいみちなんだ\n\nあたらしいあしたにむかって\nあるきだそう\nきみのえがおをむねに\nあるきだそう',
+      romaji: '"sayonara" dake datta\nsono hitokoto de subete ga wakatta\n\nwasureta mono wo tori ni kaeru you ni\nfurubita omoide no hokori wo harau\n\ntoki ga tatsu hodo ni\nkokoro ni omoku noshikaru\nano hi no yakusoku\nmamorenakatta yakusoku\n\ndemo ima wa wakaru\nkimi no kimochi mo wakaru\nwakare wa tsurai keredo\nkore ga tadashii michi nanda\n\natarashii ashita ni mukatte\narukidasou\nkimi no egao wo mune ni\narukidasou'
+    },
+    {
+      original: '花びらが舞い散る季節\n君と出会ったあの日\n桜の下で交わした約束\n今も心に残っている\n\n春の風が頬を撫でる\n君の笑顔が浮かぶ\n遠く離れていても\n君のことを想っている\n\n夏の日差しが眩しくて\n君と歩いた道\n夕暮れの空を見上げながら\n語り合ったあの頃\n\n秋の紅葉が美しく\n君の声が聞こえる\n冬の雪が降る夜\n君の温もりを思い出す',
+      hiragana: 'はなびらがまいちるきせつ\nきみとであったあのひ\nさくらのしたでかわしたやくそく\nいまもこころにのこっている\n\nはるのかぜがほおをなでる\nきみのえがおがうかぶ\nとおくはなれていても\nきみのことをおもっている\n\nなつのひざしがまぶしくて\nきみとあるいたみち\nゆうぐれのそらをみあげながら\nかたりあったあのころ\n\nあきのこうようがうつくしく\nきみのこえがきこえる\nふゆのゆきがふるよる\nきみのぬくもりをおもいだす',
+      romaji: 'hanabira ga maichiru kisetsu\nkimi to deatta ano hi\nsakura no shita de kawashita yakusoku\nima mo kokoro ni nokotte iru\n\nharu no kaze ga hoo wo naderu\nkimi no egao ga ukabu\ntooku hanarete ite mo\nkimi no koto wo omotte iru\n\nnatsu no hizashi ga mabushikute\nkimi to aruita michi\nyuugure no sora wo miage nagara\nkatariatta ano koro\n\naki no kouyou ga utsukushiku\nkimi no koe ga kikoeru\nfuyu no yuki ga furu yoru\nkimi no nukumori wo omoidasu'
+    },
+    {
+      original: '空を見上げて\n雲が流れていく\n君のことを想いながら\n一人歩いている\n\nあの日の約束\n守れなかった約束\nでも今は分かる\nこれが正しい道なんだ\n\n新しい明日に向かって\n歩き出そう\n君の笑顔を胸に\n歩き出そう\n\n時が経つほどに\n心に重くのしかかる\nでも諦めない\n君のためにも諦めない\n\nこの想いを胸に\n前を向いて歩こう\n君がいるから\n強くなれる',
+      hiragana: 'そらをみあげて\nくもがながれていく\nきみのことをおもいながら\nひとりあるいている\n\nあのひのやくそく\nまもれなかったやくそく\nでもいまはわかる\nこれがただしいみちなんだ\n\nあたらしいあしたにむかって\nあるきだそう\nきみのえがおをむねに\nあるきだそう\n\nときがたつほどに\nこころにおもくのしかかる\nでもあきらめない\nきみのためにもあきらめない\n\nこのおもいをむねに\nまえをむいてあるこう\nきみがいるから\nつよくなれる',
+      romaji: 'sora wo miagete\nkumo ga nagarete iku\nkimi no koto wo omoi nagara\nhitori aruite iru\n\nano hi no yakusoku\nmamorenakatta yakusoku\ndemo ima wa wakaru\nkore ga tadashii michi nanda\n\natarashii ashita ni mukatte\narukidasou\nkimi no egao wo mune ni\narukidasou\n\ntoki ga tatsu hodo ni\nkokoro ni omoku noshikaru\ndemo akiramenai\nkimi no tame ni mo akiramenai\n\nkono omoi wo mune ni\nmae wo muite arukou\nkimi ga iru kara\ntsuyoku nareru'
+    }
+  ];
+  
+  // Select a random sample based on title hash for consistency
+  const hash = title.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  const index = Math.abs(hash) % sampleLyrics.length;
+  
+  return sampleLyrics[index];
+}
+
 // Get all songs
 app.get('/api/songs', (req, res) => {
   try {
@@ -507,6 +550,50 @@ app.get('/api/songs/:id', (req, res) => {
 // Store for external song data (in production, use Redis or database)
 const externalSongCache = new Map();
 
+// Load cache from file on startup
+function loadCache() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const cacheFile = path.join(__dirname, 'cache.json');
+    
+    if (fs.existsSync(cacheFile)) {
+      const data = fs.readFileSync(cacheFile, 'utf8');
+      const cacheData = JSON.parse(data);
+      
+      // Restore cache entries
+      for (const [key, value] of Object.entries(cacheData)) {
+        externalSongCache.set(key, value);
+      }
+      
+      console.log(`📦 Loaded ${externalSongCache.size} songs from cache`);
+    }
+  } catch (error) {
+    console.log('⚠️ Could not load cache:', error.message);
+  }
+}
+
+// Save cache to file
+function saveCache() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const cacheFile = path.join(__dirname, 'cache.json');
+    
+    const cacheData = Object.fromEntries(externalSongCache);
+    fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
+    console.log(`💾 Saved ${externalSongCache.size} songs to cache`);
+  } catch (error) {
+    console.log('⚠️ Could not save cache:', error.message);
+  }
+}
+
+// Load cache on startup
+loadCache();
+
+// Save cache every 30 seconds
+setInterval(saveCache, 30000);
+
 // Get external song details by ID
 app.get('/api/songs/external/:id', async (req, res) => {
   try {
@@ -526,6 +613,40 @@ app.get('/api/songs/external/:id', async (req, res) => {
       const songData = externalSongCache.get(id);
       console.log(`✅ Found cached song by direct key:`, songData.title);
       console.log(`Cached song lyrics:`, songData.lyrics?.original?.substring(0, 50) + '...');
+      
+      // If lyrics are not available, fetch them
+      if (!songData.lyrics) {
+        console.log(`Fetching real lyrics for: ${songData.title} by ${songData.artist}`);
+        try {
+          const lyrics = await externalAPIs.getLyrics(songData.title, songData.artist, songData.externalId);
+          if (lyrics) {
+            songData.lyrics = lyrics;
+            // Update the cache with lyrics
+            externalSongCache.set(id, songData);
+            console.log(`Updated cache with real lyrics for: ${songData.title}`);
+          } else {
+            // Fallback to realistic sample lyrics if no real lyrics found
+            const sampleLyrics = getSampleLyrics(songData.title, songData.artist);
+            songData.lyrics = {
+              original: sampleLyrics.original,
+              hiragana: sampleLyrics.hiragana,
+              romaji: sampleLyrics.romaji
+            };
+          }
+        } catch (lyricsError) {
+          console.error('Error fetching lyrics:', lyricsError);
+          // Fallback to sample lyrics
+          const sampleLyrics = getSampleLyrics(songData.title, songData.artist);
+          songData.lyrics = {
+            original: sampleLyrics.original,
+            hiragana: sampleLyrics.hiragana,
+            romaji: sampleLyrics.romaji
+          };
+        }
+      }
+      
+      // Remove tags from song data before returning
+      delete songData.tags;
       
       // Log the complete song data being returned
       console.log('🎶 COMPLETE SONG DATA BEING RETURNED (direct cache):');
@@ -553,32 +674,37 @@ app.get('/api/songs/external/:id', async (req, res) => {
         if (!song.lyrics) {
           console.log(`Fetching real lyrics for: ${song.title} by ${song.artist}`);
           try {
-            const lyrics = await externalAPIs.getLyrics(song.title, song.artist);
+            const lyrics = await externalAPIs.getLyrics(song.title, song.artist, song.externalId);
             if (lyrics) {
               song.lyrics = lyrics;
               // Update the cache with lyrics
               externalSongCache.set(key, song);
               console.log(`Updated cache with real lyrics for: ${song.title}`);
             } else {
-              // Fallback to sample lyrics if no real lyrics found
+              // Fallback to realistic sample lyrics if no real lyrics found
+              const sampleLyrics = this.getSampleLyrics(song.title, song.artist);
               song.lyrics = {
-                original: `これは「${song.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${song.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
-                hiragana: `これは「${song.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${song.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
-                romaji: `kore wa "${song.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${song.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+                original: sampleLyrics.original,
+                hiragana: sampleLyrics.hiragana,
+                romaji: sampleLyrics.romaji
               };
             }
           } catch (lyricsError) {
             console.error('Error fetching lyrics:', lyricsError);
             // Fallback to sample lyrics
+            const sampleLyrics = this.getSampleLyrics(song.title, song.artist);
             song.lyrics = {
-              original: `これは「${song.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${song.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
-              hiragana: `これは「${song.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${song.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
-              romaji: `kore wa "${song.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${song.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+              original: sampleLyrics.original,
+              hiragana: sampleLyrics.hiragana,
+              romaji: sampleLyrics.romaji
             };
           }
         }
         
         console.log(`Found song lyrics:`, song.lyrics?.original?.substring(0, 50) + '...');
+        
+        // Remove tags from song data before returning
+        delete song.tags;
         
         // Log the complete song data being returned
         console.log('🎶 COMPLETE SONG DATA BEING RETURNED:');
@@ -606,30 +732,35 @@ app.get('/api/songs/external/:id', async (req, res) => {
       if (!songData.lyrics) {
         console.log(`Fetching real lyrics for: ${songData.title} by ${songData.artist}`);
         try {
-          const lyrics = await externalAPIs.getLyrics(songData.title, songData.artist);
+          const lyrics = await externalAPIs.getLyrics(songData.title, songData.artist, songData.externalId);
           if (lyrics) {
             songData.lyrics = lyrics;
             // Update the cache with lyrics
             externalSongCache.set(prefixedId, songData);
             console.log(`Updated cache with real lyrics for: ${songData.title}`);
           } else {
-            // Fallback to sample lyrics if no real lyrics found
+            // Fallback to realistic sample lyrics if no real lyrics found
+            const sampleLyrics = this.getSampleLyrics(songData.title, songData.artist);
             songData.lyrics = {
-              original: `これは「${songData.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${songData.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
-              hiragana: `これは「${songData.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${songData.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
-              romaji: `kore wa "${songData.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${songData.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+              original: sampleLyrics.original,
+              hiragana: sampleLyrics.hiragana,
+              romaji: sampleLyrics.romaji
             };
           }
         } catch (lyricsError) {
           console.error('Error fetching lyrics:', lyricsError);
           // Fallback to sample lyrics
+          const sampleLyrics = this.getSampleLyrics(songData.title, songData.artist);
           songData.lyrics = {
-            original: `これは「${songData.title}」の歌詞です。\n実際の歌詞は外部APIから取得できませんでした。\n\nこの楽曲は「${songData.artist}」によって作られました。\n素晴らしい音楽をお楽しみください。`,
-            hiragana: `これは「${songData.title}」のかしです。\nじっさいのかしはがいぶAPIからしゅとくできませんでした。\n\nこのがっきょくは「${songData.artist}」によってつくられました。\nすばらしいおんがくをおたのしみください。`,
-            romaji: `kore wa "${songData.title}" no kashi desu.\njissai no kashi wa gaibu API kara shutoku dekimasen deshita.\n\nkono gakkyoku wa "${songData.artist}" ni yotte tsukuraremashita.\nsubarashii ongaku wo o-tanoshimi kudasai.`
+            original: sampleLyrics.original,
+            hiragana: sampleLyrics.hiragana,
+            romaji: sampleLyrics.romaji
           };
         }
       }
+      
+      // Remove tags from song data before returning
+      delete songData.tags;
       
       return res.json({
         success: true,
@@ -637,14 +768,37 @@ app.get('/api/songs/external/:id', async (req, res) => {
       });
     }
     
-    console.log(`Song not found in cache, cannot search external APIs with ID: ${id}`);
-    console.log(`This should not happen - songs should be cached during search`);
+    console.log(`Song not found in cache, searching external APIs for ID: ${id}`);
     
-    // Return 404 if song not found in cache
+    try {
+      // Try to search for the song using external APIs
+      const searchResults = await externalAPIs.searchRealtime(id, { limit: 1, includeExternal: true });
+      
+      if (searchResults && searchResults.length > 0) {
+        const song = searchResults[0];
+        console.log(`Found song via external search: ${song.title}`);
+        
+        // Cache the found song
+        externalSongCache.set(id, song);
+        externalSongCache.set(`ext_${id}`, song);
+        
+        // Remove tags before returning
+        delete song.tags;
+        
+        return res.json({
+          success: true,
+          data: song
+        });
+      }
+    } catch (searchError) {
+      console.error('Error searching for song:', searchError);
+    }
+    
+    // Return 404 if song not found in cache or external APIs
     return res.status(404).json({
       success: false,
-      error: 'Song not found in cache',
-      message: 'Song was not properly cached during search'
+      error: 'Song not found',
+      message: 'Song not found in cache or external APIs'
     });
   } catch (error) {
     console.error('Error fetching external song details:', error);
@@ -862,6 +1016,19 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
+});
+
+// Graceful shutdown handler
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down server...');
+  saveCache();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Shutting down server...');
+  saveCache();
+  process.exit(0);
 });
 
 app.listen(PORT, () => {

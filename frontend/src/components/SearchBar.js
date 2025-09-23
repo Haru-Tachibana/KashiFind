@@ -121,6 +121,9 @@ const SearchBar = ({
     <div className={`search-container relative ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-600" />
+          </div>
           <input
             type="text"
             value={query}
@@ -128,14 +131,14 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowSuggestionsList(true)}
             placeholder={placeholder}
-            className="input-field pl-4 pr-10 py-3 w-full text-lg"
+            className="block w-full pl-12 pr-12 py-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/30 focus:border-white/40 text-gray-900 placeholder-gray-500 text-lg font-medium shadow-xl"
             autoComplete="off"
           />
           {query && (
             <button
               type="button"
               onClick={clearQuery}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -145,11 +148,11 @@ const SearchBar = ({
 
       {/* Suggestions Dropdown */}
       {showSuggestions && showSuggestionsList && query.length >= 2 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 max-h-60 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
-              <Loader className="h-5 w-5 animate-spin text-primary-600" />
-              <span className="ml-2 text-gray-600">Searching...</span>
+              <Loader className="h-5 w-5 animate-spin text-gray-600" />
+              <span className="ml-2 text-gray-800 font-medium">Searching...</span>
             </div>
           ) : suggestions.length > 0 ? (
             <ul className="py-1">
@@ -157,18 +160,22 @@ const SearchBar = ({
                 <li key={`${suggestion.title}-${suggestion.artist}`}>
                   <button
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                      index === selectedIndex ? 'bg-primary-50 text-primary-700' : 'text-gray-900'
+                    className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors ${
+                      index === selectedIndex ? 'bg-white/10' : ''
+                    } ${
+                      index === 0 ? 'rounded-t-2xl' : ''
+                    } ${
+                      index === suggestions.length - 1 ? 'rounded-b-2xl' : ''
                     }`}
                   >
-                    <div className="font-medium">{suggestion.title}</div>
-                    <div className="text-sm text-gray-500">{suggestion.artist}</div>
+                    <div className="font-medium text-gray-900">{suggestion.title}</div>
+                    <div className="text-sm text-gray-600">{suggestion.artist}</div>
                   </button>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="px-4 py-3 text-gray-500 text-center">
+            <div className="px-4 py-3 text-gray-600 text-center font-medium">
               No suggestions found
             </div>
           )}

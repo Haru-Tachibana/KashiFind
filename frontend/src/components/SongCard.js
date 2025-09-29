@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Music, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const SongCard = ({ song, showLyrics = false }) => {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ const SongCard = ({ song, showLyrics = false }) => {
             <div 
               className={`w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg ${song.imageUrl ? 'hidden' : 'flex'}`}
             >
-              <Music className="h-8 w-8" />
+              <span className="text-xl">🎵</span>
             </div>
           </div>
 

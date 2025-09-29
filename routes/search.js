@@ -305,7 +305,8 @@ router.get('/realtime', async (req, res) => {
   try {
     const {
       q: query,
-      limit = 50, // Increased from 20 to 50
+      limit = 50,
+      page = 1,
       includeExternal = true
     } = req.query;
 
@@ -317,27 +318,60 @@ router.get('/realtime', async (req, res) => {
     }
 
     const searchQuery = query.trim();
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     
     // Search external APIs ONLY (no database results)
     let externalResults = [];
     if (includeExternal === 'true') {
       try {
         const externalAPI = new externalAPIs();
-        externalResults = await externalAPI.searchMultipleSources(searchQuery, parseInt(limit));
+        // Get more results than needed to support pagination
+        const allExternalResults = await externalAPI.searchMultipleSources(searchQuery, 500); // Get up to 500 results
+        
+        // Apply pagination to external results
+        externalResults = allExternalResults.slice(skip, skip + limitNum);
+        
+        // Calculate total pages
+        const totalExternal = allExternalResults.length;
+        const totalPages = Math.ceil(totalExternal / limitNum);
+        
+        res.json({
+          success: true,
+          data: {
+            database: [],
+            external: externalResults,
+            total: totalExternal
+          },
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: totalExternal,
+            pages: totalPages
+          },
+          query: searchQuery,
+          timestamp: new Date().toISOString()
+        });
+        return;
       } catch (error) {
         console.error('Error fetching external results:', error);
       }
     }
 
-    // No database search - only external results
-    let dbResults = [];
-
+    // Fallback if external search fails
     res.json({
       success: true,
       data: {
-        database: dbResults,
-        external: externalResults,
-        total: dbResults.length + externalResults.length
+        database: [],
+        external: [],
+        total: 0
+      },
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: 0,
+        pages: 0
       },
       query: searchQuery,
       timestamp: new Date().toISOString()

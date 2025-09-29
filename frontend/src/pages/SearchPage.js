@@ -6,8 +6,7 @@ import {
   Search, 
   Filter, 
   Grid, 
-  List,
-  Music
+  List
 } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import SongCard from '../components/SongCard';
@@ -62,24 +61,24 @@ const SearchPage = () => {
     if (!searchResults) return null;
     
     if (filters.realtime) {
-      // Realtime search returns { data: { database: [], external: [], total: number } }
+      // Realtime search returns { data: { database: [], external: [], total: number }, pagination: {} }
       const allSongs = [
         ...(searchResults.data?.database || []),
         ...(searchResults.data?.external || [])
       ];
       return {
         data: allSongs,
-        pagination: {
+        pagination: searchResults.pagination || {
           total: searchResults.data?.total || allSongs.length,
-          page: 1,
-          pages: 1
+          page: filters.page,
+          pages: Math.ceil((searchResults.data?.total || allSongs.length) / filters.limit)
         }
       };
     } else {
       // Regular search returns { data: [], pagination: {} }
       return searchResults;
     }
-  }, [searchResults, filters.realtime]);
+  }, [searchResults, filters.realtime, filters.page, filters.limit]);
 
   // Fetch filter options
   const { data: genres = [] } = useQuery('genres', getGenres);
@@ -322,7 +321,9 @@ const SearchPage = () => {
         ) : error ? (
           <div className="text-center py-12">
             <div className="text-red-500 mb-4">
-              <Music className="h-12 w-12 mx-auto" />
+              <div className="h-12 w-12 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">⚠️</span>
+              </div>
             </div>
             <h3 className={`text-lg font-medium ${textColors.primary} mb-2`}>
               Search Error

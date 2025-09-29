@@ -72,10 +72,12 @@ export const searchSongs = (params) => {
 };
 
 export const searchSongsRealtime = (params) => {
-  const { query, ...restParams } = params;
+  const { query, page = 1, limit = 50, ...restParams } = params;
   return api.get('/search/realtime', { 
     params: { 
       q: query,
+      page,
+      limit,
       ...restParams, 
       includeExternal: true 
     } 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Music, Settings, Palette, Search, Home } from 'lucide-react';
+import { Menu, X, Palette, Search, Home } from 'lucide-react';
 
 const Header = ({ onCustomizeClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,20 +16,14 @@ const Header = ({ onCustomizeClick }) => {
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center space-x-3 text-white hover:text-white/80 transition-colors group"
+            className="text-white hover:text-white/80 transition-colors group"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative bg-white/20 backdrop-blur-sm rounded-lg p-2 border border-white/30">
-                <Music className="h-6 w-6 text-white" />
-              </div>
-            </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+              <span className="text-3xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent" style={{fontFamily: 'Kalam, cursive', fontWeight: '400'}}>
                 Kashi.find
               </span>
               <span className="text-xs text-white/60 font-medium -mt-1">
-                Japanese Lyrics Search
+                Lyrics Search
               </span>
             </div>
           </Link>
@@ -56,9 +50,6 @@ const Header = ({ onCustomizeClick }) => {
             >
               <Palette className="h-4 w-4" />
               Customize
-            </button>
-            <button className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all">
-              <Settings className="h-5 w-5" />
             </button>
           </nav>
 
@@ -102,10 +93,6 @@ const Header = ({ onCustomizeClick }) => {
               >
                 <Palette className="h-4 w-4" />
                 Customize Background
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all font-medium text-left">
-                <Settings className="h-4 w-4" />
-                Settings
               </button>
             </nav>
           </div>

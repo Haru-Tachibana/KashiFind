@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,15 +9,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg blur opacity-75"></div>
-                <div className="relative bg-white/20 backdrop-blur-sm rounded-lg p-2 border border-white/30">
-                  <Music className="h-6 w-6 text-white" />
-                </div>
-              </div>
+            <div className="mb-4">
               <div className="flex flex-col">
-                <span className="text-2xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                <span className="text-3xl bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent" style={{fontFamily: 'Kalam, cursive', fontWeight: '400'}}>
                   Kashi.find
                 </span>
                 <span className="text-xs text-white/60 font-medium -mt-1">

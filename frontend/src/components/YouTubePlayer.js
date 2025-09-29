@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Music } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { getYouTubeVideos } from '../utils/api';
 
 const YouTubePlayer = ({ songId, songTitle, artist }) => {
@@ -47,7 +47,9 @@ const YouTubePlayer = ({ songId, songTitle, artist }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="text-center py-8">
-          <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="h-12 w-12 text-gray-400 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🎵</span>
+          </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Videos Found</h3>
           <p className="text-gray-600">
             {error || 'No YouTube videos found for this song.'}

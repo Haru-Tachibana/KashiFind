@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
-import { Search, Music, Star, Globe, BookOpen } from 'lucide-react';
+import { Search, Star, Globe, BookOpen } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import SongCard from '../components/SongCard';
 import { getTrendingSongs, getPopularLyrics } from '../utils/api';
@@ -37,7 +37,7 @@ const HomePage = () => {
       description: 'Support for songs in various languages and formats.'
     },
     {
-      icon: <Music className="h-8 w-8" />,
+      icon: <BookOpen className="h-8 w-8" />,
       title: 'Clean Interface',
       description: 'Modern, ad-free design focused on the music and lyrics you love.'
     }

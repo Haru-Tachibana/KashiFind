@@ -4,7 +4,6 @@ import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
-  Music, 
   Calendar, 
   Tag, 
   Eye, 
@@ -98,7 +97,9 @@ const SongDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 mb-4">
-            <Music className="h-12 w-12 mx-auto" />
+            <div className="h-12 w-12 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl">⚠️</span>
+            </div>
           </div>
           <h3 className={`text-lg font-medium ${textColors.primary} mb-2`}>
             Song Not Found
@@ -176,7 +177,7 @@ const SongDetailPage = () => {
               <div 
                 className={`w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white ${displaySong?.imageUrl ? 'hidden' : 'flex'}`}
               >
-                <Music className="h-12 w-12" />
+                <span className="text-2xl">🎵</span>
               </div>
             </div>
 

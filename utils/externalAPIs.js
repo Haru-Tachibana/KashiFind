@@ -81,7 +81,16 @@ class ExternalAPIs {
       }
 
       console.log(`Searching Spotify for: "${query}"`);
-      const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`, {
+      
+      // Spotify API has a max limit of 50 per request
+      const maxPerRequest = 50;
+      const allTracks = [];
+      let offset = 0;
+      
+      while (allTracks.length < limit && offset < 1000) { // Max 1000 results
+        const currentLimit = Math.min(maxPerRequest, limit - allTracks.length);
+        
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${currentLimit}&offset=${offset}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -91,16 +100,31 @@ class ExternalAPIs {
         if (response.status === 429) {
           console.log('Spotify rate limit exceeded, waiting...');
           await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-          return this.searchSpotify(query, limit); // Retry once
+            continue; // Retry the same request
         }
         console.error('Spotify API error:', response.status, response.statusText);
-        return [];
+          break;
       }
 
       const data = await response.json();
       const tracks = data.tracks?.items || [];
       
-      console.log(`Spotify found ${tracks.length} tracks for "${query}"`);
+        if (tracks.length === 0) {
+          break; // No more results
+        }
+        
+        allTracks.push(...tracks);
+        offset += tracks.length;
+        
+        // Small delay between requests to be respectful
+        if (tracks.length === maxPerRequest && allTracks.length < limit) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      console.log(`Spotify found ${allTracks.length} tracks for "${query}"`);
+      
+      const tracks = allTracks;
       
       return tracks.map(track => ({
         title: track.name,
@@ -142,28 +166,52 @@ class ExternalAPIs {
       }
 
       console.log(`Searching Genius for: "${query}"`);
-      const response = await fetch(`https://api.genius.com/search?q=${encodeURIComponent(query)}&per_page=${limit}`, {
-        headers: {
-          'Authorization': `Bearer ${this.geniusAPIKey}`
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.log('Genius rate limit exceeded, waiting...');
-          await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-          return this.searchGenius(query, limit); // Retry once
-        }
-        console.error('Genius API error:', response.status, response.statusText);
-        const errorData = await response.json();
-        console.error('Genius error details:', errorData);
-        return [];
-      }
-
-      const data = await response.json();
-      const hits = data.response?.hits || [];
       
-      console.log(`Genius found ${hits.length} results for "${query}"`);
+      // Genius API has a max per_page of 20, so we need to make multiple requests
+      const maxPerRequest = 20;
+      const allHits = [];
+      let page = 1;
+      
+      while (allHits.length < limit && page <= 10) { // Max 10 pages (200 results)
+        const currentLimit = Math.min(maxPerRequest, limit - allHits.length);
+        
+        const response = await fetch(`https://api.genius.com/search?q=${encodeURIComponent(query)}&per_page=${currentLimit}&page=${page}`, {
+          headers: {
+            'Authorization': `Bearer ${this.geniusAPIKey}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.log('Genius rate limit exceeded, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            continue; // Retry the same request
+          }
+          console.error('Genius API error:', response.status, response.statusText);
+          const errorData = await response.json();
+          console.error('Genius error details:', errorData);
+          break;
+        }
+
+        const data = await response.json();
+        const hits = data.response?.hits || [];
+        
+        if (hits.length === 0) {
+          break; // No more results
+        }
+        
+        allHits.push(...hits);
+        page++;
+        
+        // Small delay between requests to be respectful
+        if (hits.length === maxPerRequest && allHits.length < limit) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+      
+      console.log(`Genius found ${allHits.length} results for "${query}"`);
+      
+      const hits = allHits;
       
       return hits.map(hit => ({
         title: hit.result?.title || 'Unknown Title',
@@ -301,9 +349,12 @@ class ExternalAPIs {
   // Search multiple sources
   async searchMultipleSources(query, limit = 20) {
     try {
+      // Get more results from each source to support better pagination
+      const maxResults = Math.max(limit * 2, 100); // Get at least 2x the limit or 100 results
+      
       const [spotifyResults, geniusResults] = await Promise.all([
-        this.searchSpotify(query, limit),
-        this.searchGenius(query, limit)
+        this.searchSpotify(query, maxResults),
+        this.searchGenius(query, maxResults)
       ]);
 
       // Combine and deduplicate results
@@ -315,7 +366,8 @@ class ExternalAPIs {
         )
       );
 
-      return uniqueResults.slice(0, limit);
+      // Return all unique results (not limited here, pagination handled in backend)
+      return uniqueResults;
     } catch (error) {
       console.error('Error searching multiple sources:', error);
       return [];

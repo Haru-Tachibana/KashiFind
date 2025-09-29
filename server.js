@@ -38,15 +38,19 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api/songs', require('./routes/songs'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/lyrics', require('./routes/lyrics'));
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

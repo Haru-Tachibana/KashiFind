@@ -6,8 +6,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "dev:backend": "node server.js",
+    "dev:frontend": "cd frontend && npm start",
     "build": "cd frontend && npm run build",
-    "install-all": "npm install && cd frontend && npm install"
+    "install-all": "npm install && cd frontend && npm install",
+    "setup": "node setup-env.js && npm run install-all && echo 'Setup complete! Run npm run dev:backend in one terminal and npm run dev:frontend in another.'",
+    "setup:env": "node setup-env.js",
+    "seed": "node scripts/seedData.js",
+    "test:backend": "curl http://localhost:3001/api/health",
+    "test:frontend": "curl http://localhost:3000"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

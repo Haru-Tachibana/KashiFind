@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
-import { Search, Music, TrendingUp, Star, Globe, BookOpen } from 'lucide-react';
+import { Search, Music, Star, Globe, BookOpen } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import SongCard from '../components/SongCard';
 import { getTrendingSongs, getPopularLyrics } from '../utils/api';
@@ -28,13 +28,13 @@ const HomePage = () => {
     },
     {
       icon: <BookOpen className="h-8 w-8" />,
-      title: 'Furigana Support',
-      description: 'View hiragana readings above kanji characters for easier learning.'
+      title: 'Lyrics Display',
+      description: 'Clean, readable lyrics with multiple format support.'
     },
     {
       icon: <Globe className="h-8 w-8" />,
-      title: 'Romaji Conversion',
-      description: 'Switch between kanji, hiragana, and romaji formats instantly.'
+      title: 'Multi-language',
+      description: 'Support for songs in various languages and formats.'
     },
     {
       icon: <Music className="h-8 w-8" />,
@@ -55,12 +55,11 @@ const HomePage = () => {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                Discover Japanese
+                Discover
                 <span className="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent"> Lyrics</span>
               </h1>
               <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
-                Explore thousands of Japanese songs with furigana, romaji, and modern search features. 
-                Perfect for language learners and music enthusiasts.
+                Find song lyrics with advanced search and modern features.
               </p>
             </motion.div>
 
@@ -71,32 +70,11 @@ const HomePage = () => {
               className="max-w-2xl mx-auto"
             >
               <SearchBar 
-                placeholder="Search for your favorite Japanese songs..."
+                placeholder="Search for your favorite songs..."
                 className="mb-8"
               />
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link
-                to="/search"
-                className="bg-white/20 backdrop-blur-xl border border-white/30 text-white hover:bg-white/30 hover:border-white/40 text-lg px-8 py-3 inline-flex items-center rounded-2xl font-medium transition-all shadow-xl"
-              >
-                <Search className="h-5 w-5 mr-2" />
-                Browse All Songs
-              </Link>
-              <Link
-                to="/trending"
-                className="bg-transparent border border-white/30 text-white hover:bg-white/10 hover:border-white/40 text-lg px-8 py-3 inline-flex items-center rounded-2xl font-medium transition-all"
-              >
-                <TrendingUp className="h-5 w-5 mr-2" />
-                View Trending
-              </Link>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -109,7 +87,7 @@ const HomePage = () => {
               Why Choose Our Platform?
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              We've built the perfect tool for Japanese music lovers and language learners.
+              We've built the perfect tool for music lovers and lyrics enthusiasts.
             </p>
           </div>
 
@@ -155,7 +133,6 @@ const HomePage = () => {
                 className="bg-white/20 backdrop-blur-xl border border-white/30 text-white hover:bg-white/30 hover:border-white/40 px-6 py-3 inline-flex items-center rounded-2xl font-medium transition-all"
               >
                 View All
-                <TrendingUp className="h-4 w-4 ml-2" />
               </Link>
             </div>
 
@@ -218,10 +195,10 @@ const HomePage = () => {
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Ready to Explore Japanese Music?
+              Ready to Explore Music?
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              Join thousands of users discovering new songs and improving their Japanese language skills.
+              Join thousands of users discovering new songs and lyrics.
             </p>
             <Link
               to="/search"

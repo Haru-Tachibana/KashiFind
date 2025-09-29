@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="bg-white/5 backdrop-blur-xl border-t border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
@@ -21,13 +21,13 @@ const Footer = () => {
                   Kashi.find
                 </span>
                 <span className="text-xs text-white/60 font-medium -mt-1">
-                  Japanese Lyrics Search
+                  Lyrics Search
                 </span>
               </div>
             </div>
             <p className="text-white/80 mb-4 max-w-md">
-              Discover and explore Japanese lyrics with modern design and advanced features. 
-              Perfect for language learners and music enthusiasts.
+              Discover and explore song lyrics with modern design and advanced features. 
+              Perfect for music enthusiasts.
             </p>
             <div className="flex space-x-4">
               <button 
@@ -51,52 +51,12 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">Quick Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link 
-                  to="/search" 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  Search Lyrics
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/trending" 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  Trending Songs
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/genres" 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  Browse by Genre
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/artists" 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  Popular Artists
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* Features */}
           <div>
             <h3 className="text-lg font-semibold mb-4 text-white">Features</h3>
             <ul className="space-y-2">
-              <li className="text-white/70">Furigana Support</li>
-              <li className="text-white/70">Romaji Conversion</li>
               <li className="text-white/70">Advanced Search</li>
+              <li className="text-white/70">Multi-language Support</li>
               <li className="text-white/70">Mobile Friendly</li>
               <li className="text-white/70">Clean Interface</li>
             </ul>
@@ -106,7 +66,7 @@ const Footer = () => {
         <div className="border-t border-white/20 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-white/70 text-sm">
-              © 2024 Kashi.find. All rights reserved.
+              © 2025 Kashi.find. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <button 

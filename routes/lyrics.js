@@ -3,6 +3,93 @@ const router = express.Router();
 const Song = require('../models/Song');
 const japaneseProcessor = require('../utils/simpleJapaneseProcessor');
 
+// GET /api/lyrics/popular - Get popular lyrics
+router.get('/popular', async (req, res) => {
+  try {
+    const { 
+      limit = 20, 
+      timeRange = 'all',
+      genre,
+      language = 'ja'
+    } = req.query;
+
+    let dateFilter = {};
+    const now = new Date();
+    
+    switch (timeRange) {
+      case 'day':
+        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } };
+        break;
+      case 'week':
+        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) } };
+        break;
+      case 'month':
+        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } };
+        break;
+      case 'year':
+        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000) } };
+        break;
+      default:
+        dateFilter = {};
+    }
+
+    const query = { 'metadata.language': language, ...dateFilter };
+    if (genre) {
+      query.genre = { $regex: genre, $options: 'i' };
+    }
+
+    const songs = await Song.find(query)
+      .sort({ popularity: -1, createdAt: -1 })
+      .limit(parseInt(limit))
+      .select('-lyrics.hiragana -lyrics.romaji');
+
+    res.json({
+      success: true,
+      data: songs,
+      timeRange
+    });
+  } catch (error) {
+    console.error('Error fetching popular lyrics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch popular lyrics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/lyrics/random - Get random lyrics for discovery
+router.get('/random', async (req, res) => {
+  try {
+    const { limit = 5, genre, language = 'ja' } = req.query;
+
+    const query = { 'metadata.language': language };
+    if (genre) {
+      query.genre = { $regex: genre, $options: 'i' };
+    }
+
+    const count = await Song.countDocuments(query);
+    const random = Math.floor(Math.random() * count);
+
+    const songs = await Song.find(query)
+      .skip(random)
+      .limit(parseInt(limit))
+      .select('-lyrics.hiragana -lyrics.romaji');
+
+    res.json({
+      success: true,
+      data: songs
+    });
+  } catch (error) {
+    console.error('Error fetching random lyrics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch random lyrics',
+      message: error.message
+    });
+  }
+});
+
 // GET /api/lyrics/:id - Get lyrics with format options
 router.get('/:id', async (req, res) => {
   try {
@@ -167,91 +254,5 @@ router.post('/furigana', async (req, res) => {
   }
 });
 
-// GET /api/lyrics/random - Get random lyrics for discovery
-router.get('/random', async (req, res) => {
-  try {
-    const { limit = 5, genre, language = 'ja' } = req.query;
-
-    const query = { language };
-    if (genre) {
-      query.genre = { $regex: genre, $options: 'i' };
-    }
-
-    const count = await Song.countDocuments(query);
-    const random = Math.floor(Math.random() * count);
-
-    const songs = await Song.find(query)
-      .skip(random)
-      .limit(parseInt(limit))
-      .select('-lyrics.hiragana -lyrics.romaji');
-
-    res.json({
-      success: true,
-      data: songs
-    });
-  } catch (error) {
-    console.error('Error fetching random lyrics:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch random lyrics',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/lyrics/popular - Get popular lyrics
-router.get('/popular', async (req, res) => {
-  try {
-    const { 
-      limit = 20, 
-      timeRange = 'all',
-      genre,
-      language = 'ja'
-    } = req.query;
-
-    let dateFilter = {};
-    const now = new Date();
-    
-    switch (timeRange) {
-      case 'day':
-        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } };
-        break;
-      case 'week':
-        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) } };
-        break;
-      case 'month':
-        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } };
-        break;
-      case 'year':
-        dateFilter = { createdAt: { $gte: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000) } };
-        break;
-      default:
-        dateFilter = {};
-    }
-
-    const query = { language, ...dateFilter };
-    if (genre) {
-      query.genre = { $regex: genre, $options: 'i' };
-    }
-
-    const songs = await Song.find(query)
-      .sort({ popularity: -1, createdAt: -1 })
-      .limit(parseInt(limit))
-      .select('-lyrics.hiragana -lyrics.romaji');
-
-    res.json({
-      success: true,
-      data: songs,
-      timeRange
-    });
-  } catch (error) {
-    console.error('Error fetching popular lyrics:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch popular lyrics',
-      message: error.message
-    });
-  }
-});
 
 module.exports = router;

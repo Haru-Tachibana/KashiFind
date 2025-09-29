@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
     const searchQuery = query.trim();
     const options = {
       page: parseInt(page),
-      limit: Math.min(parseInt(limit), 100),
+      limit: Math.min(parseInt(limit), 500), // Increased from 100 to 500
       sortBy,
       genre,
       year: year ? parseInt(year) : undefined,
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     };
 
     // Build search criteria based on type
-    let searchCriteria = { language };
+    let searchCriteria = { 'metadata.language': language };
     
     if (type === 'all' || type === 'title') {
       searchCriteria.$or = searchCriteria.$or || [];
@@ -305,7 +305,7 @@ router.get('/realtime', async (req, res) => {
   try {
     const {
       q: query,
-      limit = 20,
+      limit = 50, // Increased from 20 to 50
       includeExternal = true
     } = req.query;
 
@@ -318,28 +318,19 @@ router.get('/realtime', async (req, res) => {
 
     const searchQuery = query.trim();
     
-    // Search database
-    const dbResults = await Song.find({
-      $or: [
-        { title: { $regex: searchQuery, $options: 'i' } },
-        { artist: { $regex: searchQuery, $options: 'i' } },
-        { 'lyrics.original': { $regex: searchQuery, $options: 'i' } },
-        { searchKeywords: { $regex: searchQuery, $options: 'i' } }
-      ]
-    })
-    .sort({ popularity: -1, createdAt: -1 })
-    .limit(parseInt(limit))
-    .select('-lyrics.hiragana -lyrics.romaji');
-
-    // Search external APIs
+    // Search external APIs ONLY (no database results)
     let externalResults = [];
     if (includeExternal === 'true') {
       try {
-        externalResults = await externalAPIs.searchMultipleSources(searchQuery, parseInt(limit));
+        const externalAPI = new externalAPIs();
+        externalResults = await externalAPI.searchMultipleSources(searchQuery, parseInt(limit));
       } catch (error) {
         console.error('Error fetching external results:', error);
       }
     }
+
+    // No database search - only external results
+    let dbResults = [];
 
     res.json({
       success: true,

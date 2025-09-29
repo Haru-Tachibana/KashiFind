@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ExternalLink, Music } from 'lucide-react';
+import { Play, Music } from 'lucide-react';
 import { getYouTubeVideos } from '../utils/api';
 
 const YouTubePlayer = ({ songId, songTitle, artist }) => {
@@ -13,10 +13,10 @@ const YouTubePlayer = ({ songId, songTitle, artist }) => {
       try {
         setLoading(true);
         const response = await getYouTubeVideos(songId, songTitle, artist);
-        if (response.data.success) {
-          setVideos(response.data.data);
-          if (response.data.data.length > 0) {
-            setSelectedVideo(response.data.data[0]);
+        if (response.success) {
+          setVideos(response.data);
+          if (response.data.length > 0) {
+            setSelectedVideo(response.data[0]);
           }
         }
       } catch (err) {
@@ -78,57 +78,13 @@ const YouTubePlayer = ({ songId, songTitle, artist }) => {
             />
           </div>
           <div className="mt-3">
-            <h4 className="font-medium text-gray-900 line-clamp-2">{selectedVideo.title}</h4>
-            <p className="text-sm text-gray-600">{selectedVideo.channel}</p>
+            <p className="text-xs text-gray-400">
+              Views: {selectedVideo.viewCount?.toLocaleString()}
+            </p>
           </div>
         </div>
       )}
 
-      {/* Video List */}
-      {videos.length > 1 && (
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Other Videos</h4>
-          <div className="space-y-3">
-            {videos.slice(1).map((video) => (
-              <div
-                key={video.id}
-                className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedVideo?.id === video.id
-                    ? 'border-primary-200 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => setSelectedVideo(video)}
-              >
-                <div className="flex-shrink-0">
-                  <img
-                    src={video.thumbnail}
-                    alt={video.title}
-                    className="w-16 h-12 object-cover rounded"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h5 className="text-sm font-medium text-gray-900 line-clamp-2">
-                    {video.title}
-                  </h5>
-                  <p className="text-xs text-gray-600">{video.channel}</p>
-                </div>
-                <div className="flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(video.url, '_blank');
-                    }}
-                    className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
-                    title="Open in YouTube"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Open in YouTube Button */}
       {selectedVideo && (

@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 
 function App() {
   const [backgroundImage, setBackgroundImage] = useState(() => {
-    return localStorage.getItem('kashifind-background') || '';
+    return localStorage.getItem('kashifind-background') || 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
   });
 
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -51,10 +51,17 @@ function App() {
         <div 
           className="min-h-screen flex flex-col relative"
           style={{
-            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backgroundSize: 'cover',
+            background: backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient') 
+              ? backgroundImage 
+              : backgroundImage.startsWith('data:') || backgroundImage.startsWith('http')
+                ? `url(${backgroundImage})`
+                : backgroundImage,
+            backgroundSize: backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient') 
+              ? 'auto' 
+              : 'cover',
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed',
+            backgroundRepeat: 'no-repeat',
           }}
         >
           {/* Glassmorphism overlay */}

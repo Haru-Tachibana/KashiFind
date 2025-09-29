@@ -24,7 +24,7 @@ const SearchPage = () => {
     genre: '',
     year: '',
     page: 1,
-    limit: 20,
+    limit: 50, // Increased from 20 to 50
     realtime: true // Enable real-time search by default
   });
   
@@ -56,6 +56,30 @@ const SearchPage = () => {
       staleTime: 30000, // 30 seconds
     }
   );
+
+  // Normalize search results data structure
+  const normalizedResults = React.useMemo(() => {
+    if (!searchResults) return null;
+    
+    if (filters.realtime) {
+      // Realtime search returns { data: { database: [], external: [], total: number } }
+      const allSongs = [
+        ...(searchResults.data?.database || []),
+        ...(searchResults.data?.external || [])
+      ];
+      return {
+        data: allSongs,
+        pagination: {
+          total: searchResults.data?.total || allSongs.length,
+          page: 1,
+          pages: 1
+        }
+      };
+    } else {
+      // Regular search returns { data: [], pagination: {} }
+      return searchResults;
+    }
+  }, [searchResults, filters.realtime]);
 
   // Fetch filter options
   const { data: genres = [] } = useQuery('genres', getGenres);
@@ -109,6 +133,7 @@ const SearchPage = () => {
       sortBy: 'relevance',
       genre: '',
       year: '',
+      limit: 50,
       page: 1
     }));
   };
@@ -254,6 +279,23 @@ const SearchPage = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Results Per Page */}
+              <div>
+                <label className={`block text-sm font-medium ${textColors.primary} mb-2`}>
+                  Results Per Page
+                </label>
+                <select
+                  value={filters.limit}
+                  onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
+                  className="input-field"
+                >
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                  <option value={200}>200 per page</option>
+                </select>
+              </div>
             </div>
 
             {hasActiveFilters && (
@@ -289,7 +331,7 @@ const SearchPage = () => {
               {error.message || 'Something went wrong while searching. Please try again.'}
             </p>
           </div>
-        ) : !searchResults?.data || searchResults.data.length === 0 ? (
+        ) : !normalizedResults?.data || normalizedResults.data.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-white/60 mb-4">
               <Search className="h-12 w-12 mx-auto" />
@@ -307,15 +349,15 @@ const SearchPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <p className={textColors.secondary}>
-                  {searchResults?.pagination?.total || searchResults?.data?.length || 0} songs found
+                  {normalizedResults?.pagination?.total || normalizedResults?.data?.length || 0} songs found
                   {filters.realtime && (
                     <span className="ml-2 text-green-600">
                       (live results)
                     </span>
                   )}
-                  {searchResults?.pagination?.total > 0 && (
+                  {normalizedResults?.pagination?.total > 0 && (
                     <span className="ml-2">
-                      (Page {searchResults.pagination.page} of {searchResults.pagination.pages})
+                      (Page {normalizedResults.pagination.page} of {normalizedResults.pagination.pages})
                     </span>
                   )}
                 </p>
@@ -331,11 +373,11 @@ const SearchPage = () => {
             {/* Results Grid */}
             <div className={
               viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
                 : 'space-y-4'
             }>
               {/* Search Results */}
-              {searchResults?.data?.map((song, index) => (
+              {normalizedResults?.data?.map((song, index) => (
                 <motion.div
                   key={song._id || song.externalId || `song-${index}`}
                   initial={{ opacity: 0, y: 20 }}
@@ -348,42 +390,117 @@ const SearchPage = () => {
             </div>
 
             {/* Pagination */}
-            {searchResults?.pagination?.pages > 1 && (
-              <div className="mt-12 flex items-center justify-center">
-                <nav className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handlePageChange(filters.page - 1)}
-                    disabled={filters.page <= 1}
-                    className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  
-                  {Array.from({ length: Math.min(5, searchResults.pagination.pages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                          filters.page === pageNum
-                            ? 'bg-primary-600 text-white'
-                            : 'text-white bg-white/10 border border-white/20 hover:bg-white/20'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  
-                  <button
-                    onClick={() => handlePageChange(filters.page + 1)}
-                    disabled={filters.page >= searchResults.pagination.pages}
-                    className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </nav>
+            {normalizedResults?.pagination?.pages > 1 && (
+              <div className="mt-12">
+                {/* Pagination Info */}
+                <div className="text-center mb-6">
+                  <p className={textColors.secondary}>
+                    Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, normalizedResults.pagination.total)} of {normalizedResults.pagination.total} songs
+                  </p>
+                </div>
+                
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-center">
+                  <nav className="flex items-center space-x-2">
+                    {/* First Page */}
+                    {filters.page > 3 && (
+                      <>
+                        <button
+                          onClick={() => handlePageChange(1)}
+                          className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20"
+                        >
+                          1
+                        </button>
+                        {filters.page > 4 && (
+                          <span className="px-2 text-white/50">...</span>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => handlePageChange(filters.page - 1)}
+                      disabled={filters.page <= 1}
+                      className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    {Array.from({ length: Math.min(7, normalizedResults.pagination.pages) }, (_, i) => {
+                      let pageNum;
+                      if (normalizedResults.pagination.pages <= 7) {
+                        pageNum = i + 1;
+                      } else if (filters.page <= 4) {
+                        pageNum = i + 1;
+                      } else if (filters.page >= normalizedResults.pagination.pages - 3) {
+                        pageNum = normalizedResults.pagination.pages - 6 + i;
+                      } else {
+                        pageNum = filters.page - 3 + i;
+                      }
+                      
+                      if (pageNum < 1 || pageNum > normalizedResults.pagination.pages) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                            filters.page === pageNum
+                              ? 'bg-primary-600 text-white'
+                              : 'text-white bg-white/10 border border-white/20 hover:bg-white/20'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={() => handlePageChange(filters.page + 1)}
+                      disabled={filters.page >= normalizedResults.pagination.pages}
+                      className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                    
+                    {/* Last Page */}
+                    {filters.page < normalizedResults.pagination.pages - 2 && (
+                      <>
+                        {filters.page < normalizedResults.pagination.pages - 3 && (
+                          <span className="px-2 text-white/50">...</span>
+                        )}
+                        <button
+                          onClick={() => handlePageChange(normalizedResults.pagination.pages)}
+                          className="px-3 py-2 text-sm font-medium text-white/70 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20"
+                        >
+                          {normalizedResults.pagination.pages}
+                        </button>
+                      </>
+                    )}
+                  </nav>
+                </div>
+                
+                {/* Quick Jump */}
+                <div className="mt-4 flex items-center justify-center space-x-2">
+                  <span className={textColors.secondary}>Go to page:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={normalizedResults.pagination.pages}
+                    value={filters.page}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= normalizedResults.pagination.pages) {
+                        handlePageChange(page);
+                      }
+                    }}
+                    className="w-16 px-2 py-1 text-sm bg-white/10 border border-white/20 rounded text-white placeholder-white/50"
+                    placeholder="Page"
+                  />
+                  <span className={textColors.secondary}>of {normalizedResults.pagination.pages}</span>
+                </div>
               </div>
             )}
           </>

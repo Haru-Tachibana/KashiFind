@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Song = require('../models/Song');
 const japaneseProcessor = require('../utils/simpleJapaneseProcessor');
+const externalAPIs = require('../utils/externalAPIs');
 const Joi = require('joi');
 
 // Validation schemas
@@ -49,7 +50,7 @@ router.get('/', async (req, res) => {
     if (search) {
       songs = await Song.search(search, options);
     } else {
-      const query = { language };
+      const query = { 'metadata.language': language };
       if (genre) query.genre = { $regex: genre, $options: 'i' };
       if (year) query.year = year;
 
@@ -82,7 +83,7 @@ router.get('/', async (req, res) => {
     }
 
     const total = await Song.countDocuments(
-      search ? { $text: { $search: search } } : {}
+      search ? { $text: { $search: search } } : { 'metadata.language': language }
     );
 
     res.json({
@@ -126,6 +127,56 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch song',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/songs/external/:id - Get external song details (Spotify)
+router.get('/external/:id', async (req, res) => {
+  try {
+    const spotifyId = req.params.id;
+    const externalAPI = new externalAPIs();
+    
+    // Get song details from Spotify
+    const songDetails = await externalAPI.getSpotifyTrackDetails(spotifyId);
+    
+    if (!songDetails) {
+      return res.status(404).json({
+        success: false,
+        error: 'External song not found'
+      });
+    }
+
+    // Try to get lyrics from multiple sources
+    let lyrics = null;
+    try {
+      lyrics = await externalAPI.getLyrics(songDetails.title, songDetails.artist);
+    } catch (lyricsError) {
+      console.log('Could not fetch lyrics:', lyricsError.message);
+    }
+
+    // Combine Spotify data with lyrics
+    const songData = {
+      ...songDetails,
+      lyrics: lyrics ? {
+        original: lyrics,
+        hiragana: null,
+        romaji: null
+      } : null,
+      source: 'spotify',
+      externalId: spotifyId
+    };
+
+    res.json({
+      success: true,
+      data: songData
+    });
+  } catch (error) {
+    console.error('Error fetching external song:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch external song',
       message: error.message
     });
   }
@@ -250,6 +301,48 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete song',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/songs/:id/youtube - Get YouTube videos for a song
+router.get('/:id/youtube', async (req, res) => {
+  try {
+    const { title, artist } = req.query;
+    
+    if (!title || !artist) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and artist are required'
+      });
+    }
+
+    const externalAPI = new externalAPIs();
+    console.log(`Getting YouTube videos for: "${title}" by ${artist}`);
+    
+    // Get YouTube videos and sort by view count (most popular first)
+    const youtubeVideos = await externalAPI.getYouTubeVideos(title, artist, 5);
+    
+    if (youtubeVideos && youtubeVideos.length > 0) {
+      // Sort by view count descending (most popular first)
+      youtubeVideos.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      
+      res.json({
+        success: true,
+        data: youtubeVideos
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: 'No YouTube videos found for this song'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching YouTube videos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch YouTube videos',
       message: error.message
     });
   }

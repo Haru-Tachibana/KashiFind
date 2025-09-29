@@ -14,7 +14,8 @@ const LyricsDisplay = ({
 
   const handleCopyLyrics = async () => {
     try {
-      await navigator.clipboard.writeText(lyrics);
+      const lyricsText = getCurrentLyricsText();
+      await navigator.clipboard.writeText(lyricsText);
       setCopied(true);
       toast.success('Lyrics copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
@@ -26,9 +27,10 @@ const LyricsDisplay = ({
   const handleShare = async () => {
     if (navigator.share) {
       try {
+        const lyricsText = getCurrentLyricsText();
         await navigator.share({
           title: `${song.artist} - ${song.title}`,
-          text: lyrics,
+          text: lyricsText,
           url: window.location.href,
         });
       } catch (error) {
@@ -48,8 +50,11 @@ const LyricsDisplay = ({
   const formatLyrics = (text) => {
     if (!text) return '';
     
+    // Handle both string and object formats
+    const lyricsText = typeof text === 'string' ? text : text.original || '';
+    
     // Split into lines and process each line
-    return text.split('\n').map((line, index) => {
+    return lyricsText.split('\n').map((line, index) => {
       if (!line.trim()) {
         return <br key={index} />;
       }
@@ -62,6 +67,23 @@ const LyricsDisplay = ({
         </div>
       );
     });
+  };
+
+  // Get the appropriate lyrics text based on format
+  const getCurrentLyricsText = () => {
+    if (!lyrics) return 'No lyrics available for this song.';
+    
+    // Handle new lyrics structure where lyrics.original is an object
+    const lyricsData = lyrics.original || lyrics;
+    
+    switch (format) {
+      case 'hiragana':
+        return lyricsData?.hiragana || lyricsData?.original || 'No hiragana available.';
+      case 'romaji':
+        return lyricsData?.romaji || lyricsData?.original || 'No romaji available.';
+      default:
+        return lyricsData?.original || lyricsData || 'No lyrics available.';
+    }
   };
 
   // Check if character is kanji
@@ -88,12 +110,16 @@ const LyricsDisplay = ({
   const formatLyricsWithFurigana = (originalText, hiraganaText) => {
     if (!originalText || !hiraganaText) return formatLyrics(originalText);
     
-    return originalText.split('\n').map((line, lineIndex) => {
+    // Handle both string and object formats
+    const lyricsText = typeof originalText === 'string' ? originalText : originalText.original || '';
+    const hiraganaTextStr = typeof hiraganaText === 'string' ? hiraganaText : hiraganaText.original || '';
+    
+    return lyricsText.split('\n').map((line, lineIndex) => {
       if (!line.trim()) {
         return <br key={lineIndex} />;
       }
       
-      const hiraganaLine = hiraganaText.split('\n')[lineIndex] || '';
+      const hiraganaLine = hiraganaTextStr.split('\n')[lineIndex] || '';
       
       // Create smart furigana line - only show furigana for kanji
       let smartFurigana = '';
@@ -247,27 +273,27 @@ const LyricsDisplay = ({
       {/* Lyrics Content */}
       <div className="lyrics-content">
         {/* Show furigana on top of kanji when enabled and in original format */}
-        {showFurigana && format === 'original' && song.lyrics?.hiragana ? (
-          formatLyricsWithFurigana(lyrics, song.lyrics.hiragana)
+        {showFurigana && format === 'original' && lyrics?.original?.hiragana ? (
+          formatLyricsWithFurigana(lyrics.original, lyrics.original.hiragana)
         ) : (
-          formatLyrics(lyrics)
+          formatLyrics(getCurrentLyricsText())
         )}
         
         {/* Additional formats if toggled */}
-        {showFurigana && song.lyrics?.hiragana && format !== 'original' && (
+        {showFurigana && lyrics?.original?.hiragana && format !== 'original' && (
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Hiragana Reading:</h3>
             <div className="japanese-text text-lg leading-relaxed text-blue-900">
-              {formatLyrics(song.lyrics.hiragana)}
+              {formatLyrics(lyrics.original.hiragana)}
             </div>
           </div>
         )}
 
-        {showRomaji && song.lyrics?.romaji && format !== 'romaji' && (
+        {showRomaji && lyrics?.original?.romaji && format !== 'romaji' && (
           <div className="mt-6 p-4 bg-green-50 rounded-lg">
             <h3 className="text-sm font-medium text-green-800 mb-2">Romaji:</h3>
             <div className="text-lg leading-relaxed text-green-900">
-              {formatLyrics(song.lyrics.romaji)}
+              {formatLyrics(lyrics.original.romaji)}
             </div>
           </div>
         )}

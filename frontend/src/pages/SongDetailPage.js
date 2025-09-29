@@ -126,13 +126,16 @@ const SongDetailPage = () => {
         return 'No lyrics available for this song.';
       }
       
+      // Handle new lyrics structure where lyrics.original is an object
+      const lyricsData = displaySong.lyrics.original || displaySong.lyrics;
+      
       switch (lyricsFormat) {
         case 'hiragana':
-          return displaySong.lyrics.hiragana || displaySong.lyrics.original || 'No hiragana available.';
+          return lyricsData?.hiragana || lyricsData?.original || 'No hiragana available.';
         case 'romaji':
-          return displaySong.lyrics.romaji || displaySong.lyrics.original || 'No romaji available.';
+          return lyricsData?.romaji || lyricsData?.original || 'No romaji available.';
         default:
-          return displaySong.lyrics.original || 'No lyrics available.';
+          return lyricsData?.original || lyricsData || 'No lyrics available.';
       }
     };
 
@@ -234,31 +237,31 @@ const SongDetailPage = () => {
           </div>
         </motion.div>
 
-        {/* Lyrics Display */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <LyricsDisplay
-            song={displaySong}
-            lyrics={getLyricsText()}
-            format={lyricsFormat}
-            onFormatChange={handleFormatChange}
-          />
-        </motion.div>
-
         {/* YouTube Player */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8"
+          transition={{ delay: 0.2 }}
+          className="mb-8"
         >
           <YouTubePlayer
             songId={id}
             songTitle={displaySong.title}
             artist={displaySong.artist}
+          />
+        </motion.div>
+
+        {/* Lyrics Display */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <LyricsDisplay
+            song={displaySong}
+            lyrics={displaySong?.lyrics}
+            format={lyricsFormat}
+            onFormatChange={handleFormatChange}
           />
         </motion.div>
 

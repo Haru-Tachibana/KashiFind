@@ -34,7 +34,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - REACT_APP_API_URL=http://localhost:3001/api
+        # Use BACKEND_URL env var if set (for production), otherwise localhost
+        - REACT_APP_API_URL=${BACKEND_URL:-http://localhost:3001/api}
     container_name: kashifind-frontend
     restart: unless-stopped
     ports:

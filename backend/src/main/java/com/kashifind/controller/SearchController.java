@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,29 +71,18 @@ public class SearchController {
             int offset = (page - 1) * limit;
             int endOffset = offset + limit;
             
-            // Fetch enough results to cover the requested page
-            // Fetch at least (page * limit) results, up to a reasonable maximum (1000)
-            int resultsToFetch = Math.min((page * limit) + limit, 1000);
-            
-            // Search external APIs - fetch enough to cover pagination
-            List<Map<String, Object>> allResults = externalAPIsService.searchMultipleSources(q, resultsToFetch);
+            // Search external APIs only
+            List<Map<String, Object>> allResults = externalAPIsService.searchMultipleSources(q, 500);
             
             // Apply pagination
             int total = allResults.size();
-            int startIndex = Math.min(offset, total);
-            int endIndex = Math.min(endOffset, total);
-            
-            List<Map<String, Object>> paginatedResults = new ArrayList<>();
-            if (startIndex < total) {
-                paginatedResults = allResults.subList(startIndex, endIndex);
-            }
-            
-            // Calculate total pages - if we got less than requested, we might have more
-            // For now, assume we got all available results if we got fewer than requested
-            int totalPages = (int) Math.ceil((double) total / limit);
+            List<Map<String, Object>> paginatedResults = allResults.subList(
+                Math.min(offset, total), 
+                Math.min(endOffset, total)
+            );
             
             PaginationResponse pagination = new PaginationResponse(
-                page, limit, total, totalPages
+                page, limit, total, (int) Math.ceil((double) total / limit)
             );
             
             Map<String, Object> data = new HashMap<>();

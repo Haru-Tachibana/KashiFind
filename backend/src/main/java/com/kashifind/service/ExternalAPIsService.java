@@ -87,63 +87,43 @@ public class ExternalAPIsService {
         
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-            List<Map<String, Object>> allResults = new ArrayList<>();
+            String url = String.format("https://api.spotify.com/v1/search?q=%s&type=track&limit=%d", 
+                encodedQuery, Math.min(limit, 50));
             
-            // Spotify API allows max 50 per request, so make multiple calls if needed
-            int maxPerRequest = 50;
-            int totalRequests = (int) Math.ceil((double) limit / maxPerRequest);
+            String response = webClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
             
-            for (int i = 0; i < totalRequests && allResults.size() < limit; i++) {
-                int offset = i * maxPerRequest;
-                int currentLimit = Math.min(maxPerRequest, limit - allResults.size());
+            if (response != null) {
+                JsonNode json = objectMapper.readTree(response);
+                JsonNode tracks = json.get("tracks").get("items");
                 
-                String url = String.format("https://api.spotify.com/v1/search?q=%s&type=track&limit=%d&offset=%d", 
-                    encodedQuery, currentLimit, offset);
-                
-                String response = webClient.get()
-                    .uri(url)
-                    .header("Authorization", "Bearer " + token)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-                
-                if (response != null) {
-                    JsonNode json = objectMapper.readTree(response);
-                    JsonNode tracksNode = json.get("tracks");
-                    if (tracksNode == null) {
-                        break; // No more results
+                List<Map<String, Object>> results = new ArrayList<>();
+                for (JsonNode track : tracks) {
+                    Map<String, Object> song = new HashMap<>();
+                    String trackId = track.get("id").asText();
+                    song.put("id", trackId);
+                    song.put("externalId", trackId); // For navigation
+                    song.put("title", track.get("name").asText());
+                    song.put("artist", track.get("artists").get(0).get("name").asText());
+                    song.put("album", track.get("album").get("name").asText());
+                    song.put("duration", track.get("duration_ms").asInt() / 1000);
+                    song.put("previewUrl", track.has("preview_url") ? track.get("preview_url").asText() : null);
+                    song.put("imageUrl", track.get("album").get("images").get(0).get("url").asText());
+                    song.put("externalUrl", track.get("external_urls").get("spotify").asText());
+                    song.put("source", "spotify");
+                    // Add year if available
+                    if (track.get("album").has("release_date")) {
+                        String releaseDate = track.get("album").get("release_date").asText();
+                        song.put("year", releaseDate.split("-")[0]);
                     }
-                    JsonNode tracks = tracksNode.get("items");
-                    if (tracks == null || !tracks.isArray() || tracks.size() == 0) {
-                        break; // No more results
-                    }
-                    
-                    for (JsonNode track : tracks) {
-                        if (allResults.size() >= limit) {
-                            break;
-                        }
-                        Map<String, Object> song = new HashMap<>();
-                        String trackId = track.get("id").asText();
-                        song.put("id", trackId);
-                        song.put("externalId", trackId); // For navigation
-                        song.put("title", track.get("name").asText());
-                        song.put("artist", track.get("artists").get(0).get("name").asText());
-                        song.put("album", track.get("album").get("name").asText());
-                        song.put("duration", track.get("duration_ms").asInt() / 1000);
-                        song.put("previewUrl", track.has("preview_url") ? track.get("preview_url").asText() : null);
-                        song.put("imageUrl", track.get("album").get("images").get(0).get("url").asText());
-                        song.put("externalUrl", track.get("external_urls").get("spotify").asText());
-                        song.put("source", "spotify");
-                        // Add year if available
-                        if (track.get("album").has("release_date")) {
-                            String releaseDate = track.get("album").get("release_date").asText();
-                            song.put("year", releaseDate.split("-")[0]);
-                        }
-                        allResults.add(song);
-                    }
+                    results.add(song);
                 }
+                return results;
             }
-            return allResults;
         } catch (Exception e) {
             System.err.println("Spotify search error: " + e.getMessage());
         }

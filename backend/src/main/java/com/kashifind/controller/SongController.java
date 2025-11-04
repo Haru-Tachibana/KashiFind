@@ -96,45 +96,41 @@ public class SongController {
             // Search for most relevant video - try multiple strategies
             List<Map<String, Object>> videos = null;
             
-            // Search for most relevant video - always include both title and artist
-            // This ensures we get the correct video for the specific artist's song
+            // Search for most relevant video - prioritize song title
+            // Don't require artist name to match - YouTube has videos even without exact artist match
+            // Strategy: Try title first (most reliable), then combine with artist if needed
             
-            // Strategy 1: Try artist + title + "official" (most relevant)
-            videos = externalAPIsService.searchYouTube(
-                cleanArtist + " " + cleanTitle + " official", 1
-            );
+            // Strategy 1: Try song title only (most reliable - like YouTube search)
+            // This matches how YouTube search works - just search by song name
+            videos = externalAPIsService.searchYouTube(cleanTitle, 1);
             
-            // Strategy 2: Try artist + title + "MV"
-            if (videos == null || videos.isEmpty()) {
-                videos = externalAPIsService.searchYouTube(
-                    cleanArtist + " " + cleanTitle + " MV", 1
-                );
-            }
-            
-            // Strategy 3: Try artist + title (most reliable combination)
-            if (videos == null || videos.isEmpty()) {
-                videos = externalAPIsService.searchYouTube(
-                    cleanArtist + " " + cleanTitle, 1
-                );
-            }
-            
-            // Strategy 4: Try title + artist (alternative order)
+            // Strategy 2: Try title + artist together (but don't require exact match)
             if (videos == null || videos.isEmpty()) {
                 videos = externalAPIsService.searchYouTube(
                     cleanTitle + " " + cleanArtist, 1
                 );
             }
             
-            // Strategy 5: Try title + artist + "official"
+            // Strategy 3: Try artist + title (optional - artist might not match)
             if (videos == null || videos.isEmpty()) {
                 videos = externalAPIsService.searchYouTube(
-                    cleanTitle + " " + cleanArtist + " official", 1
+                    cleanArtist + " " + cleanTitle, 1
                 );
             }
             
-            // Strategy 6: Last resort - try title only (but prefer to avoid this)
+            // Strategy 4: Try title + "official" or "MV" keywords
             if (videos == null || videos.isEmpty()) {
-                videos = externalAPIsService.searchYouTube(cleanTitle, 1);
+                videos = externalAPIsService.searchYouTube(cleanTitle + " official", 1);
+            }
+            
+            // Strategy 5: Try title + "MV"
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(cleanTitle + " MV", 1);
+            }
+            
+            // Strategy 6: Last resort - try artist only
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(cleanArtist, 1);
             }
             
             return ResponseEntity.ok(ApiResponse.success(videos != null ? videos : new ArrayList<>()));

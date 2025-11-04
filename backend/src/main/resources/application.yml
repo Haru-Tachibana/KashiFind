@@ -1,0 +1,42 @@
+server:
+  port: ${PORT:3001}
+
+spring:
+  application:
+    name: kashifind-backend
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.kashifind: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:${APP_FRONTEND_URL:http://localhost:3000}}
+  jwt:
+    secret: ${JWT_SECRET:${APP_JWT_SECRET:your_jwt_secret_key_here_change_in_production}}
+    expires-in: ${JWT_EXPIRES_IN:${APP_JWT_EXPIRES_IN:7d}}
+  rate-limit:
+    window-ms: ${RATE_LIMIT_WINDOW_MS:900000}
+    max-requests: ${RATE_LIMIT_MAX_REQUESTS:100}
+  external-apis:
+    spotify:
+      client-id: ${SPOTIFY_CLIENT_ID:}
+      client-secret: ${SPOTIFY_CLIENT_SECRET:}
+    youtube:
+      api-key: ${YOUTUBE_API_KEY:}
+

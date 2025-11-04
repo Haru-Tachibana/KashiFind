@@ -27,6 +27,10 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    // Return the data directly, or the entire response if data has success field
+    if (response.data && response.data.success !== undefined) {
+      return response.data.data || response.data; // Unwrap ApiResponse
+    }
     return response.data;
   },
   (error) => {
@@ -34,6 +38,10 @@ api.interceptors.response.use(
       // Handle unauthorized access
       localStorage.removeItem('authToken');
       window.location.href = '/login';
+    }
+    // Return error response data if available
+    if (error.response?.data) {
+      return Promise.reject(new Error(error.response.data.message || error.response.data.error || 'Request failed'));
     }
     return Promise.reject(error);
   }

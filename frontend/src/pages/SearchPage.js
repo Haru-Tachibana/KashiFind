@@ -24,7 +24,7 @@ const SearchPage = () => {
     year: '',
     page: 1,
     limit: 50, // Increased from 20 to 50
-    realtime: true // Enable real-time search by default
+    realtime: true // Always use real-time search (database removed)
   });
   
   const [showFilters, setShowFilters] = useState(false);
@@ -44,15 +44,19 @@ const SearchPage = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Fetch search results
+  // Fetch search results - always use realtime since we removed database
   const { data: searchResults, isLoading, error } = useQuery(
     ['search', filters],
-    () => filters.realtime ? searchSongsRealtime(filters) : searchSongs(filters),
+    () => searchSongsRealtime(filters),
     {
-      enabled: !!filters.query,
+      enabled: !!filters.query && filters.query.trim().length > 0,
       keepPreviousData: true,
       refetchOnWindowFocus: false,
       staleTime: 30000, // 30 seconds
+      retry: 1,
+      onError: (err) => {
+        console.error('Search error:', err);
+      }
     }
   );
 
@@ -60,25 +64,20 @@ const SearchPage = () => {
   const normalizedResults = React.useMemo(() => {
     if (!searchResults) return null;
     
-    if (filters.realtime) {
-      // Realtime search returns { data: { database: [], external: [], total: number }, pagination: {} }
-      const allSongs = [
-        ...(searchResults.data?.database || []),
-        ...(searchResults.data?.external || [])
-      ];
-      return {
-        data: allSongs,
-        pagination: searchResults.pagination || {
-          total: searchResults.data?.total || allSongs.length,
-          page: filters.page,
-          pages: Math.ceil((searchResults.data?.total || allSongs.length) / filters.limit)
-        }
-      };
-    } else {
-      // Regular search returns { data: [], pagination: {} }
-      return searchResults;
-    }
-  }, [searchResults, filters.realtime, filters.page, filters.limit]);
+    // Realtime search returns { data: { database: [], external: [], total: number }, pagination: {} }
+    const allSongs = [
+      ...(searchResults.data?.database || []),
+      ...(searchResults.data?.external || [])
+    ];
+    return {
+      data: allSongs,
+      pagination: searchResults.pagination || {
+        total: searchResults.data?.total || allSongs.length,
+        page: filters.page,
+        pages: Math.ceil((searchResults.data?.total || allSongs.length) / filters.limit)
+      }
+    };
+  }, [searchResults, filters.page, filters.limit]);
 
   // Fetch filter options
   const { data: genres = [] } = useQuery('genres', getGenres);
@@ -157,16 +156,6 @@ const SearchPage = () => {
             </div>
             
             <div className="flex gap-2">
-              <button
-                onClick={() => setFilters(prev => ({ ...prev, realtime: !prev.realtime }))}
-                className={`btn-secondary inline-flex items-center ${
-                  filters.realtime ? 'bg-green-100 text-green-700' : ''
-                }`}
-              >
-                <div className={`h-2 w-2 rounded-full mr-2 ${filters.realtime ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                {filters.realtime ? 'Real-time ON' : 'Real-time OFF'}
-              </button>
-              
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`btn-secondary inline-flex items-center ${
@@ -329,8 +318,14 @@ const SearchPage = () => {
               Search Error
             </h3>
             <p className={textColors.secondary}>
-              {error.message || 'Something went wrong while searching. Please try again.'}
+              {error?.message || error?.toString() || 'Something went wrong while searching. Please try again.'}
             </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 btn-primary"
+            >
+              Retry Search
+            </button>
           </div>
         ) : !normalizedResults?.data || normalizedResults.data.length === 0 ? (
           <div className="text-center py-12">
@@ -351,23 +346,12 @@ const SearchPage = () => {
               <div className="flex items-center space-x-4">
                 <p className={textColors.secondary}>
                   {normalizedResults?.pagination?.total || normalizedResults?.data?.length || 0} songs found
-                  {filters.realtime && (
-                    <span className="ml-2 text-green-600">
-                      (live results)
-                    </span>
-                  )}
                   {normalizedResults?.pagination?.total > 0 && (
                     <span className="ml-2">
                       (Page {normalizedResults.pagination.page} of {normalizedResults.pagination.pages})
                     </span>
                   )}
                 </p>
-                {filters.realtime && (
-                  <div className="flex items-center text-xs text-green-600">
-                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse mr-1"></div>
-                    Real-time search active
-                  </div>
-                )}
               </div>
             </div>
 

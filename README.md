@@ -1,239 +1,166 @@
-# Kashi.find - Modern Lyrics Search Platform
+# KashiFind
 
-A modern, elegant lyrics search platform with glassmorphism design and customizable backgrounds. Originally designed for Japanese lyrics but now supports all types of songs and languages.
+A modern music, lyrics, and MV search application with **real-time search** from external APIs.
 
-## Features
+## 🏗️ Architecture
 
-### Glassmorphism Design
-- Modern transparent UI with backdrop blur effects
-- Elegant glass-like components throughout the interface
-- Smooth animations and transitions
+- **Backend**: Java Spring Boot (Java 17, Spring Boot 3.2.0)
+- **Frontend**: React with Tailwind CSS
+- **Search**: Real-time only - no database! All searches query external APIs
+- **Deployment**: Docker & Docker Compose
 
-### Customizable Backgrounds
-- Upload your own background images
-- Preset gradient backgrounds
-- Real-time background preview
-- Background settings persist across sessions
+## 🎯 Key Features
 
-### Advanced Search
-- Real-time search with instant suggestions
-- Search by song title, artist, or lyrics
-- External API integration (Spotify, Genius, YouTube)
-- Intelligent search algorithms
+- **100% Real-time Search**: No database - all searches query Spotify, YouTube, Genius APIs in real-time
+- **Japanese Text Processing**: Converts lyrics to Hiragana and Romaji
+- **Multiple API Sources**: Spotify, YouTube, Genius, Lyrics.ovh
+- **Fast & Fresh**: Always get the latest results from external sources
 
-### Multi-language Support
-- Support for songs in various languages
-- Clean, readable lyrics display
-- Multiple format support
-- Smart text processing
-
-### Rich Song Data
-- Album artwork from Spotify
-- Song metadata (year, genre, duration)
-- Lyrics with multiple formats
-- YouTube video integration
-
-### Responsive Design
-- Mobile-first approach
-- Touch-friendly interface
-- Optimized for all screen sizes
-- Smooth mobile navigation
-
-## Getting Started
-
-### Prerequisites
-- Node.js 16+
-- npm or yarn
-- MongoDB (local or cloud)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Haru-Tachibana/KashiFind.git
-   cd KashiFind
-   ```
-
-2. **Install dependencies**
-   ```bash
-   # Backend
-   npm install
-   
-   # Frontend
-   cd frontend
-   npm install
-   ```
-
-3. **Environment Setup**
-   ```bash
-   # Copy environment template
-   cp env.template .env
-   
-   # Edit .env with your API keys
-   nano .env
-   ```
-
-4. **Start the application**
-   ```bash
-   # Terminal 1 - Backend
-   npm start
-   
-   # Terminal 2 - Frontend
-   cd frontend
-   npm start
-   ```
-
-## Configuration
-
-### Required API Keys
-
-Add these to your `.env` file:
-
-```env
-# Spotify API
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-
-# Genius API
-GENIUS_ACCESS_TOKEN=your_genius_access_token
-
-# YouTube API (Optional)
-YOUTUBE_API_KEY=your_youtube_api_key
-
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/kashifind
-```
-
-### API Key Setup
-
-1. **Spotify API**
-   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-   - Create a new app
-   - Get Client ID and Client Secret
-
-2. **Genius API**
-   - Visit [Genius API](https://genius.com/api-clients)
-   - Create an account and get access token
-
-3. **YouTube API** (Optional)
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Enable YouTube Data API v3
-   - Create API key
-
-4. **MongoDB**
-   - Install MongoDB locally or use MongoDB Atlas
-   - Update MONGODB_URI in your .env file
-
-## Customization
-
-### Background Customization
-- Click the "Customize" button in the header
-- Upload your own images or choose from presets
-- Backgrounds are automatically saved to localStorage
-
-### UI Themes
-The app uses a glassmorphism design system with:
-- Semi-transparent components
-- Backdrop blur effects
-- White text with opacity variations
-- Gradient accents
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 KashiFind/
-├── frontend/                 # React frontend
+├── backend/          # Java Spring Boot backend
 │   ├── src/
-│   │   ├── components/      # Reusable components
-│   │   ├── pages/          # Page components
-│   │   ├── utils/          # Utility functions
-│   │   └── App.js          # Main app component
-│   └── package.json
-├── routes/                  # Express.js routes
-├── utils/                   # Backend utility functions
-├── models/                  # Database models
-├── config/                  # Configuration files
-├── server.js               # Main server file
-├── package.json
-└── README.md
+│   ├── pom.xml
+│   └── Dockerfile
+├── frontend/         # React frontend
+│   ├── src/
+│   ├── package.json
+│   └── Dockerfile
+└── docker-compose.yml # Docker orchestration
 ```
 
-## API Endpoints
+## 🚀 Quick Start (3 Steps)
 
-### Search
-- `GET /api/search` - Search songs
-- `GET /api/search/trending` - Get trending songs
-- `GET /api/search/years` - Get available years
-- `GET /api/search/genres` - Get available genres
+### 1. Set Up Environment Variables
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env and add your API keys
+nano .env  # or use your favorite editor
+```
+
+**Required:**
+- `JWT_SECRET` - Generate: `openssl rand -base64 32`
+
+**Required for Full Functionality:**
+- `SPOTIFY_CLIENT_ID` & `SPOTIFY_CLIENT_SECRET` - Get from https://developer.spotify.com/dashboard (for song search)
+- `YOUTUBE_API_KEY` - Get from https://console.developers.google.com/ (for music videos)
+- `GENIUS_API_KEY` - Get from https://genius.com/api-clients (for lyrics)
+
+**Optional:**
+- Lyrics.ovh API works without keys (free tier)
+
+### 2. Start Docker Services
+
+```bash
+# Make sure Docker Desktop is running, then:
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### 3. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Health Check**: http://localhost:3001/api/health
+
+## 🔍 How It Works
+
+**Real-time Search Only:**
+- Every search queries **Spotify** and **YouTube** APIs in real-time
+- No database storage - results are always fresh
+- Lyrics fetched from **Lyrics.ovh** and **Genius** APIs
+- Japanese text processing happens on-the-fly
+
+## 📚 API Documentation
+
+### Search (Real-time)
+- `GET /api/search?q={query}` - Search songs from external APIs
+- `GET /api/search/realtime?q={query}` - Real-time search (same as above)
+- `GET /api/search/suggestions?q={query}` - Get search suggestions
 
 ### Songs
-- `GET /api/songs` - Get songs with pagination
-- `GET /api/songs/:id` - Get song details
-- `GET /api/songs/:id/youtube` - Get YouTube videos for song
-- `GET /api/songs/external/:id` - Get external song data
+- `GET /api/songs/{id}` - Get song details from external API
+- `GET /api/songs/external/{id}` - Get external song with lyrics
+- `GET /api/songs/{id}/youtube?title=X&artist=Y` - Get YouTube videos
 
 ### Lyrics
-- `GET /api/lyrics/popular` - Get popular lyrics
-- `GET /api/lyrics/:id` - Get lyrics for specific song
+- `GET /api/lyrics/{id}?title=X&artist=Y` - Get lyrics (real-time)
+- `POST /api/lyrics/process` - Process text to generate hiragana/romaji
+- `POST /api/lyrics/furigana` - Generate furigana for text
 
-## Development
+## 🔑 Required API Keys
 
-### Available Scripts
+### Spotify (Required for song search)
+1. Go to: https://developer.spotify.com/dashboard
+2. Create a new app
+3. Copy Client ID and Client Secret
 
-**Backend:**
+### YouTube (Required for music videos)
+1. Go to: https://console.developers.google.com/
+2. Create a project
+3. Enable "YouTube Data API v3"
+4. Create API Key
+
+### Genius (Optional, for lyrics)
+1. Go to: https://genius.com/api-clients
+2. Create API client
+3. Copy API key
+
+**Note**: Lyrics.ovh works without API keys (free).
+
+## 🐳 Docker Services
+
+1. **Backend**: Java Spring Boot API (Port 3001)
+2. **Frontend**: React app served via Nginx (Port 3000)
+
+**No MongoDB needed!** - Everything is real-time.
+
+## 🔧 Common Commands
+
 ```bash
-npm start          # Start production server
-npm run dev        # Start with nodemon
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Check status
+docker-compose ps
 ```
 
-**Frontend:**
-```bash
-npm start          # Start development server
-npm run build      # Build for production
-npm test           # Run tests
-```
+## 📝 Features
 
-### Code Style
-- ESLint for code linting
-- Prettier for code formatting
-- Consistent component structure
+- ✅ Real-time search from Spotify, YouTube
+- ✅ Japanese lyrics processing (Hiragana, Romaji)
+- ✅ Multiple lyrics sources (Lyrics.ovh, Genius)
+- ✅ Music video search from YouTube
+- ✅ No database - always fresh results
+- ✅ RESTful API
+- ✅ Docker containerization
 
-## Deployment
+## 📚 Documentation
 
-### Frontend (Vercel/Netlify)
-1. Build the frontend: `npm run build`
-2. Deploy the `build` folder
-3. Set environment variables in deployment platform
+- **[QUICK_START.md](./QUICK_START.md)** - Fast deployment guide
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
+- **[DOCKER.md](./DOCKER.md)** - Docker-specific documentation
 
-### Backend (Railway/Heroku)
-1. Set environment variables
-2. Deploy the backend folder
-3. Update frontend API URLs
+## 📄 License
 
-## Contributing
+MIT
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## 👤 Author
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Spotify API for music data
-- Genius API for lyrics
-- YouTube API for video integration
-- React and Node.js communities
-- Music and lyrics communities
-
-## Support
-
-For support, email support@kashifind.com or create an issue on GitHub.
-
----
-
-**Kashi.find** - Discover music through beautiful lyrics
+KashiFind Development Team

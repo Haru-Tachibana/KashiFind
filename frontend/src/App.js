@@ -11,6 +11,7 @@ import SongDetailPage from './pages/SongDetailPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import BackgroundCustomizer from './components/BackgroundCustomizer';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -46,9 +47,10 @@ function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div 
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <div 
           className="min-h-screen flex flex-col relative"
           style={{
             background: backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient') 
@@ -123,6 +125,7 @@ function App() {
         </div>
       </Router>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -27,10 +27,18 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Return the data directly, or the entire response if data has success field
+    // Handle ApiResponse wrapper: { success: true, data: {...}, error: null }
     if (response.data && response.data.success !== undefined) {
-      return response.data.data || response.data; // Unwrap ApiResponse
+      // Check if response is an error
+      if (!response.data.success) {
+        // Return error for rejection
+        const errorMessage = response.data.error || response.data.message || 'Request failed';
+        return Promise.reject(new Error(errorMessage));
+      }
+      // Unwrap the ApiResponse - return the inner data
+      return response.data.data !== undefined ? response.data.data : response.data;
     }
+    // Direct response
     return response.data;
   },
   (error) => {
@@ -41,7 +49,11 @@ api.interceptors.response.use(
     }
     // Return error response data if available
     if (error.response?.data) {
-      return Promise.reject(new Error(error.response.data.message || error.response.data.error || 'Request failed'));
+      // Handle ApiResponse error format
+      if (error.response.data.error) {
+        return Promise.reject(new Error(error.response.data.error));
+      }
+      return Promise.reject(new Error(error.response.data.message || 'Request failed'));
     }
     return Promise.reject(error);
   }
@@ -137,25 +149,24 @@ export const getPopularLyrics = (params = {}) => {
   return api.get('/lyrics/popular', { params });
 };
 
-// Related songs (placeholder - would need backend implementation)
-export const getRelatedSongs = (songId, params = {}) => {
-  // This would typically be implemented in the backend
-  // For now, we'll return songs from the same artist or genre
-  return api.get('/songs', { 
-    params: { 
-      ...params,
-      relatedTo: songId 
-    } 
-  });
+// Related songs - disabled since we removed database
+// Could search for more songs by same artist if needed
+export const getRelatedSongs = async (songId, params = {}) => {
+  // Return empty array - related songs feature disabled (no database)
+  // In the future, could search for more songs by same artist
+  return Promise.resolve([]);
 };
 
 // YouTube API functions
 export const getYouTubeVideos = (songId, songTitle, artist) => {
-  return api.get(`/songs/${songId}/youtube`, {
-    params: {
-      title: songTitle,
-      artist: artist
-    }
+  // Use POST to avoid URL encoding issues with Japanese characters
+  // Spring Boot sometimes rejects GET requests with improperly encoded characters
+  return api.post(`/songs/${encodeURIComponent(songId)}/youtube`, {
+    title: songTitle || '',
+    artist: artist || ''
+  }, {
+    // Increase timeout for YouTube API calls
+    timeout: 30000
   });
 };
 

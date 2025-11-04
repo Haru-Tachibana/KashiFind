@@ -12,25 +12,55 @@ const YouTubePlayer = ({ songId, songTitle, artist }) => {
     const fetchVideos = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await getYouTubeVideos(songId, songTitle, artist);
-        if (response.success) {
-          setVideos(response.data);
-          if (response.data.length > 0) {
-            setSelectedVideo(response.data[0]);
+        console.log('YouTube API response:', response);
+        console.log('Response type:', typeof response, 'Is array:', Array.isArray(response));
+        
+        // Handle response structure
+        // Backend returns: ApiResponse.success(videos) where videos is List<Map>
+        // After interceptor unwraps: response = the list/array
+        let videoList = [];
+        if (response) {
+          if (Array.isArray(response)) {
+            // Already an array (most common case)
+            videoList = response;
+          } else if (response.id || response.videoId || response.url) {
+            // Single video object - wrap in array
+            videoList = [response];
+          } else if (response.data) {
+            // Nested data property
+            videoList = Array.isArray(response.data) ? response.data : [response.data];
+          } else if (response.success && response.data) {
+            // Still wrapped in ApiResponse
+            videoList = Array.isArray(response.data) ? response.data : [response.data];
           }
+        }
+        
+        console.log('Processed video list:', videoList);
+        console.log('Video list length:', videoList.length);
+        console.log('Song info:', { songId, songTitle, artist });
+        setVideos(videoList);
+        if (videoList.length > 0) {
+          setSelectedVideo(videoList[0]);
+        } else {
+          setError('No videos found');
         }
       } catch (err) {
         console.error('Error fetching YouTube videos:', err);
-        setError('Failed to load videos');
+        setError(err.message || 'Failed to load videos');
       } finally {
         setLoading(false);
       }
     };
 
-    if (songId) {
+    if (songId && songTitle && artist) {
       fetchVideos();
+    } else {
+      setLoading(false);
+      setError('Missing song information');
     }
-  }, [songId]);
+  }, [songId, songTitle, artist]);
 
   if (loading) {
     return (

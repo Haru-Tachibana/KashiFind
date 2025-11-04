@@ -44,21 +44,28 @@ const SongDetailPage = () => {
     ['song', id],
     async () => {
       console.log('🌐 Fetching from external API:', id);
-      const response = await getExternalSong(id);
-      console.log('✅ Found in external API:', response.data?.title);
-      return response;
+      try {
+        const response = await getExternalSong(id);
+        console.log('✅ API response:', response);
+        // Response is already unwrapped by interceptor
+        // If it's an object with data property, use that, otherwise use response directly
+        return response;
+      } catch (err) {
+        console.error('❌ Error fetching song:', err);
+        throw err;
+      }
     },
     {
       enabled: !!id,
       retry: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
-      refetchOnWindowFocus: false, // Don't refetch when window gains focus
-      refetchOnMount: false, // Don't refetch when component mounts if data exists
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
     }
   );
 
-  // Use the fetched song
+  // Use the fetched song - handle both direct object and wrapped responses
   const displaySong = song?.data || song;
   
   // Debug logging - only log once per song
@@ -92,7 +99,11 @@ const SongDetailPage = () => {
     );
   }
 
-  if (error) {
+  if (error || !displaySong) {
+    const errorMessage = error?.message || error?.toString() || 'Song not found';
+    console.error('Song detail error:', error);
+    console.error('Display song:', displaySong);
+    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -105,14 +116,24 @@ const SongDetailPage = () => {
             Song Not Found
           </h3>
           <p className={`${textColors.secondary} mb-4`}>
-            The song you're looking for doesn't exist or has been removed.
+            {errorMessage.includes('Spotify') 
+              ? 'This song could not be found in Spotify. The ID may be invalid or the song may have been removed.'
+              : 'The song you\'re looking for doesn\'t exist or has been removed.'}
           </p>
-          <button
-            onClick={() => navigate('/search')}
-            className="btn-primary"
-          >
-            Back to Search
-          </button>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => navigate('/search')}
+              className="btn-primary"
+            >
+              Back to Search
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="btn-secondary"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );

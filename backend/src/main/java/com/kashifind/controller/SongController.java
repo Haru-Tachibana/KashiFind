@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,9 @@ public class SongController {
     @GetMapping("/external/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getExternalSong(@PathVariable String id) {
         try {
+            // ONLY use Spotify for song details - YouTube is only for video player
             Map<String, Object> songDetails = externalAPIsService.getSpotifyTrackDetails(id);
+            
             if (songDetails != null && !songDetails.isEmpty()) {
                 // Try to get lyrics from Spotify and other sources
                 String title = String.valueOf(songDetails.getOrDefault("title", ""));
@@ -53,30 +56,91 @@ public class SongController {
                 
                 return ResponseEntity.ok(ApiResponse.success(songDetails));
             }
+            
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("External song not found"));
+                .body(ApiResponse.error("Song not found in Spotify"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Failed to fetch external song", e.getMessage()));
+                .body(ApiResponse.error("Failed to fetch song from Spotify", e.getMessage()));
         }
+    }
+    
+    @PostMapping("/{id}/youtube")
+    public ResponseEntity<ApiResponse<Object>> getYouTubeVideosPost(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+        return getYouTubeVideos(id, body.get("title"), body.get("artist"));
     }
     
     @GetMapping("/{id}/youtube")
     public ResponseEntity<ApiResponse<Object>> getYouTubeVideos(
+            @PathVariable String id,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String artist) {
         
-        if (title == null || artist == null) {
+        if (title == null || artist == null || title.isEmpty() || artist.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("Title and artist are required"));
         }
         
         try {
-            List<Map<String, Object>> videos = externalAPIsService.searchYouTube(
-                title + " " + artist, 5
+            // Clean title and artist for better search results
+            String cleanTitle = title != null ? title.trim() : "";
+            String cleanArtist = artist != null ? artist.trim() : "";
+            
+            if (cleanTitle.isEmpty() || cleanArtist.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Title and artist cannot be empty"));
+            }
+            
+            // Search for most relevant video - try multiple strategies
+            List<Map<String, Object>> videos = null;
+            
+            // Search for most relevant video - always include both title and artist
+            // This ensures we get the correct video for the specific artist's song
+            
+            // Strategy 1: Try artist + title + "official" (most relevant)
+            videos = externalAPIsService.searchYouTube(
+                cleanArtist + " " + cleanTitle + " official", 1
             );
-            return ResponseEntity.ok(ApiResponse.success(videos));
+            
+            // Strategy 2: Try artist + title + "MV"
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(
+                    cleanArtist + " " + cleanTitle + " MV", 1
+                );
+            }
+            
+            // Strategy 3: Try artist + title (most reliable combination)
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(
+                    cleanArtist + " " + cleanTitle, 1
+                );
+            }
+            
+            // Strategy 4: Try title + artist (alternative order)
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(
+                    cleanTitle + " " + cleanArtist, 1
+                );
+            }
+            
+            // Strategy 5: Try title + artist + "official"
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(
+                    cleanTitle + " " + cleanArtist + " official", 1
+                );
+            }
+            
+            // Strategy 6: Last resort - try title only (but prefer to avoid this)
+            if (videos == null || videos.isEmpty()) {
+                videos = externalAPIsService.searchYouTube(cleanTitle, 1);
+            }
+            
+            return ResponseEntity.ok(ApiResponse.success(videos != null ? videos : new ArrayList<>()));
         } catch (Exception e) {
+            System.err.println("Error fetching YouTube videos: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Failed to fetch YouTube videos", e.getMessage()));
         }

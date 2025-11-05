@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Twitter, Mail } from 'lucide-react';
+import { Github } from 'lucide-react';
 
 const Footer = () => {
+  const openRepo = () => {
+    window.open('https://github.com/Haru-Tachibana/KashiFind', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <footer className="bg-white/5 backdrop-blur-xl border-t border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -27,20 +31,9 @@ const Footer = () => {
               <button 
                 className="text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
                 aria-label="GitHub"
+                onClick={openRepo}
               >
                 <Github className="h-5 w-5" />
-              </button>
-              <button 
-                className="text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </button>
-              <button 
-                className="text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
-                aria-label="Email"
-              >
-                <Mail className="h-5 w-5" />
               </button>
             </div>
           </div>
